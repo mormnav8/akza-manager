@@ -157,6 +157,12 @@ button {
   gap: 16px;
 }
 
+.action-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(140px, 1fr));
+  gap: 16px;
+}
+
 .status-card {
   display: flex;
   flex-direction: column;
@@ -173,6 +179,36 @@ button {
 
 .status-card strong {
   font-size: 0.95rem;
+}
+
+.action-health {
+  background: linear-gradient(135deg, #7f1d1d, #ef4444);
+  color: #fff;
+}
+
+.action-stamina {
+  background: linear-gradient(135deg, #14532d, #22c55e);
+  color: #fff;
+}
+
+.action-block {
+  background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+  color: #fff;
+}
+
+.action-attack {
+  background: linear-gradient(135deg, #92400e, #facc15);
+  color: #111827;
+}
+
+.action-self-damage {
+  background: linear-gradient(135deg, #9a2c00, #f59e0b);
+  color: #fff;
+}
+
+.action-pass {
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
+  color: #fff;
 }
 
 .status-card .stat-value {
@@ -244,8 +280,14 @@ input[type='range'] {
 }
 
 @media (max-width: 720px) {
-  .status-grid {
-    grid-template-columns: repeat(2, minmax(120px, 1fr));
+  .action-buttons-grid {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .action-buttons-grid {
+    grid-template-columns: 1fr;
   }
 }
 

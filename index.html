@@ -30,8 +30,8 @@
             <input id="player-0-stamina" type="number" min="1" value="10" />
           </div>
           <div class="field-group">
-            <label for="player-0-dex">Destreza (1-5)</label>
-            <input id="player-0-dex" type="number" min="1" max="5" value="3" />
+            <label for="player-0-dex">Destreza (-5 a 5)</label>
+            <input id="player-0-dex" type="number" min="-5" max="5" value="3" />
           </div>
           <button class="primary-button" data-player="0" id="save-player-0">Guardar jugador 1</button>
         </article>
@@ -51,8 +51,8 @@
             <input id="player-1-stamina" type="number" min="1" value="10" />
           </div>
           <div class="field-group">
-            <label for="player-1-dex">Destreza (1-5)</label>
-            <input id="player-1-dex" type="number" min="1" max="5" value="3" />
+            <label for="player-1-dex">Destreza (-5 a 5)</label>
+            <input id="player-1-dex" type="number" min="-5" max="5" value="3" />
           </div>
           <button class="primary-button" data-player="1" id="save-player-1">Guardar jugador 2</button>
         </article>
@@ -82,33 +82,30 @@
         </div>
       </div>
 
-      <div class="status-grid">
-        <button class="status-card" data-action="health" id="action-health">
+      <div class="action-buttons-grid">
+        <button class="status-card action-health" data-action="health" id="action-health">
           <strong>Vida</strong>
           <div class="stat-value" id="stat-health"></div>
           <progress id="health-bar" max="100" value="0"></progress>
         </button>
-        <button class="status-card" data-action="stamina" id="action-stamina">
+        <button class="status-card action-stamina" data-action="stamina" id="action-stamina">
           <strong>Stamina</strong>
           <div class="stat-value" id="stat-stamina"></div>
           <progress id="stamina-bar" max="100" value="0"></progress>
         </button>
-        <button class="status-card" data-action="block" id="action-block">
+        <button class="status-card action-block" data-action="block" id="action-block">
           <strong>Bloqueo</strong>
           <div class="stat-value" id="stat-block"></div>
         </button>
-        <button class="status-card" data-action="attack" id="action-attack">
+        <button class="status-card action-attack" data-action="attack" id="action-attack">
           <strong>Daño</strong>
           <div class="stat-value">Atacar</div>
         </button>
-        <button class="status-card" data-action="self-damage" id="action-self-damage">
+        <button class="status-card action-self-damage" data-action="self-damage" id="action-self-damage">
           <strong>Autodaño</strong>
           <div class="stat-value">Infligirse daño</div>
         </button>
-      </div>
-
-      <div class="status-grid" style="margin-top:12px;">
-        <button class="status-card" data-action="pass" id="action-pass">
+        <button class="status-card action-pass" data-action="pass" id="action-pass">
           <strong>Pasar</strong>
           <div class="stat-value">Ganar Stamina</div>
         </button>
