@@ -31,6 +31,9 @@ function init() {
   q('#confirm-start').addEventListener('click', startBattle);
   q('#restart-button').addEventListener('click', resetGame);
   qa('.status-card').forEach(card => card.addEventListener('click', handleActionSelect));
+  q('#end-turn').addEventListener('click', finalizeTurn);
+  const restart2 = q('#restart-button-2');
+  if (restart2) restart2.addEventListener('click', resetGame);
   render();
 }
 
@@ -184,9 +187,9 @@ function renderActionPanel() {
 
   if (state.selectedAction === 'health') {
     title = 'Ajustar Vida';
-    controlNode = createSliderAction('Selecciona cuánta vida restaurar', 1, active.maxHp, active.maxHp, value => {
+    controlNode = createSliderAction('Selecciona cuánta vida sumar', 1, active.maxHp, Math.min(active.maxHp, 1), value => {
       active.hp = Math.min(active.maxHp, active.hp + value);
-      afterAction(`${active.name} recupera ${value} puntos de vida.`);
+      afterAction(`${active.name} gana ${value} puntos de vida.`);
     });
   }
 
@@ -282,23 +285,36 @@ function renderActionPanel() {
   }
 
   if (state.selectedAction === 'attack') {
-    title = 'Atacar al oponente';
-    controlNode = createSliderAction(`Selecciona el daño para ${players[1 - state.activeIndex].name}`, 1, active.maxHp, 1, value => {
-      const opponent = players[1 - state.activeIndex];
+    title = 'Autoataque (daño al propio jugador)';
+    controlNode = createSliderAction(`Selecciona el daño a aplicarte`, 1, active.maxHp, 1, value => {
+      // Damage affects the active player (self-inflicted)
       let remainingDamage = value;
       let blockUsed = 0;
-      if (opponent.block > 0) {
-        blockUsed = Math.min(opponent.block, remainingDamage);
-        opponent.block -= blockUsed;
+      if (active.block > 0) {
+        blockUsed = Math.min(active.block, remainingDamage);
+        active.block -= blockUsed;
         remainingDamage -= blockUsed;
       }
       if (remainingDamage > 0) {
-        opponent.hp = Math.max(opponent.hp - remainingDamage, 0);
+        active.hp = Math.max(active.hp - remainingDamage, 0);
       }
       const blockText = blockUsed > 0 ? `${blockUsed} al bloqueo` : '';
       const lifeText = remainingDamage > 0 ? `${remainingDamage} a la vida` : '';
       const parts = [blockText, lifeText].filter(Boolean).join(' y ');
-      afterAction(`${active.name} inflige ${value} de daño a ${opponent.name} (${parts}).`);
+      afterAction(`${active.name} recibe ${value} de daño (${parts}).`);
+    });
+  }
+
+  if (state.selectedAction === 'pass') {
+    title = 'Pasar (ganar stamina)';
+    controlNode = createSliderAction('Selecciona cuánto stamina ganar', 1, 30, 1, value => {
+      const prev = active.stamina;
+      active.stamina = active.stamina + value;
+      afterAction(`${active.name} gana ${value} de stamina (ahora ${active.stamina}/${active.maxStamina}).`);
+      if (active.stamina > active.maxStamina) {
+        // show prompt to increase max stamina
+        showIncreaseMaxPrompt(active, value);
+      }
     });
   }
 
@@ -339,17 +355,10 @@ function createSliderAction(label, min, max, value, callback) {
 }
 
 function afterAction(message) {
-  const currentIndex = state.activeIndex;
-  const targetIndex = 1 - currentIndex;
+  // Record action in the fight log but DO NOT switch turn automatically.
   updateLog(message);
-  if (checkGameEnd(targetIndex, currentIndex)) {
-    state.selectedAction = null;
-    render();
-    return;
-  }
-
   state.selectedAction = null;
-  state.activeIndex = targetIndex;
+  checkGameEnd();
   render();
 }
 
@@ -364,14 +373,62 @@ function renderBattleLog() {
   return state.battleLog.map(entry => `<p>${entry}</p>`).join('');
 }
 
-function checkGameEnd(targetIndex, actorIndex) {
-  if (players[targetIndex].hp <= 0) {
-    state.winner = players[actorIndex];
-    q('#action-panel').classList.add('hidden');
-    updateLog(`${state.winner.name} ha ganado el duelo.`);
-    return true;
+function checkGameEnd() {
+  for (let i = 0; i < players.length; i++) {
+    if (players[i].hp <= 0) {
+      state.winner = players[1 - i] || players[i];
+      q('#action-panel').classList.add('hidden');
+      updateLog(`${state.winner.name} ha ganado el duelo.`);
+      return true;
+    }
   }
   return false;
+}
+
+function finalizeTurn() {
+  if (state.winner) return;
+  state.selectedAction = null;
+  state.activeIndex = 1 - state.activeIndex;
+  updateLog(`Turno: ahora es el turno de ${players[state.activeIndex].name}.`);
+  render();
+}
+
+function showIncreaseMaxPrompt(player, added) {
+  const panel = q('#action-panel');
+  const modal = document.createElement('div');
+  modal.className = 'action-controls';
+  modal.style.marginTop = '12px';
+  const msg = document.createElement('p');
+  msg.textContent = `La stamina actual (${player.stamina}) excede la stamina máxima (${player.maxStamina}). ¿Deseas aumentar la stamina máxima?`;
+  const controls = document.createElement('div');
+  controls.className = 'control-row';
+  const yesBtn = document.createElement('button');
+  yesBtn.className = 'secondary-button';
+  yesBtn.textContent = 'Sí';
+  const noBtn = document.createElement('button');
+  // "No" resaltada según tu petición: la mostramos como botón primario
+  noBtn.className = 'primary-button';
+  noBtn.textContent = 'No';
+  controls.appendChild(yesBtn);
+  controls.appendChild(noBtn);
+  modal.appendChild(msg);
+  modal.appendChild(controls);
+  panel.appendChild(modal);
+
+  yesBtn.addEventListener('click', () => {
+    // aumentar la stamina máxima para acomodar el valor actual
+    player.maxStamina = player.stamina;
+    updateLog(`${player.name} aumenta stamina máxima a ${player.maxStamina}.`);
+    panel.removeChild(modal);
+    render();
+  });
+
+  noBtn.addEventListener('click', () => {
+    // no aumenta la stamina máxima; dejar la stamina actual como está (puede seguir > max)
+    updateLog(`${player.name} decidió no aumentar la stamina máxima.`);
+    panel.removeChild(modal);
+    render();
+  });
 }
 
 init();
