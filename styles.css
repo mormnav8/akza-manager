@@ -158,9 +158,23 @@ button {
 }
 
 .action-buttons-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(140px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 16px;
+}
+
+.action-row {
+  display: grid;
+  gap: 16px;
+}
+
+.action-row-top,
+.action-row-bottom {
+  grid-template-columns: repeat(2, minmax(140px, 1fr));
+}
+
+.action-row-middle {
+  grid-template-columns: repeat(3, minmax(140px, 1fr));
 }
 
 .status-card {
@@ -182,33 +196,33 @@ button {
 }
 
 .action-health {
-  background: linear-gradient(135deg, #7f1d1d, #ef4444);
-  color: #fff;
+  background: linear-gradient(135deg, #7f1d1d, #ef4444) !important;
+  color: #fff !important;
 }
 
 .action-stamina {
-  background: linear-gradient(135deg, #14532d, #22c55e);
-  color: #fff;
+  background: linear-gradient(135deg, #14532d, #22c55e) !important;
+  color: #fff !important;
 }
 
 .action-block {
-  background: linear-gradient(135deg, #1e3a8a, #3b82f6);
-  color: #fff;
+  background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+  color: #fff !important;
 }
 
 .action-attack {
-  background: linear-gradient(135deg, #92400e, #facc15);
-  color: #111827;
+  background: linear-gradient(135deg, #92400e, #facc15) !important;
+  color: #111827 !important;
 }
 
 .action-self-damage {
-  background: linear-gradient(135deg, #9a2c00, #f59e0b);
-  color: #fff;
+  background: linear-gradient(135deg, #9a2c00, #f59e0b) !important;
+  color: #fff !important;
 }
 
 .action-pass {
-  background: linear-gradient(135deg, #2563eb, #60a5fa);
-  color: #fff;
+  background: linear-gradient(135deg, #2563eb, #60a5fa) !important;
+  color: #fff !important;
 }
 
 .status-card .stat-value {
@@ -280,13 +294,20 @@ input[type='range'] {
 }
 
 @media (max-width: 720px) {
-  .action-buttons-grid {
+  .action-row-top,
+  .action-row-bottom {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+
+  .action-row-middle {
     grid-template-columns: repeat(2, minmax(140px, 1fr));
   }
 }
 
 @media (max-width: 520px) {
-  .action-buttons-grid {
+  .action-row-top,
+  .action-row-middle,
+  .action-row-bottom {
     grid-template-columns: 1fr;
   }
 }
