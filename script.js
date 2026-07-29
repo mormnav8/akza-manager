@@ -329,12 +329,14 @@ function renderActionPanel() {
   if (state.selectedAction === 'pass') {
     title = 'Pasar (ganar stamina)';
     controlNode = createSliderAction('Selecciona cuánto stamina ganar', 1, 30, 1, value => {
-      active.stamina = active.stamina + value;
+      const previous = active.stamina;
+      const next = Math.min(active.maxStamina, active.stamina + value);
+      const overflow = Math.max(0, previous + value - active.maxStamina);
+      active.stamina = next;
       const message = `${active.name} gana ${value} de stamina (ahora ${active.stamina}/${active.maxStamina}).`;
-      if (active.stamina > active.maxStamina) {
-        state.selectedAction = 'pass';
-        afterAction(message, true);
-        setTimeout(() => showIncreaseMaxPrompt(active), 0);
+      if (overflow > 0) {
+        const cappedMessage = `${active.name} intenta ganar ${value}, pero solo se le permite llegar a ${active.maxStamina} de stamina. El exceso (${overflow}) no se suma.`;
+        afterAction(cappedMessage);
         return;
       }
       afterAction(message);
