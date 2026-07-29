@@ -163,6 +163,17 @@ button {
   gap: 16px;
 }
 
+.ui-banner {
+  background: linear-gradient(90deg, #0f766e, #1d4ed8);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
 .action-row {
   display: grid;
   gap: 16px;
