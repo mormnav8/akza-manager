@@ -231,7 +231,7 @@ function renderActionPanel() {
     displayRow.className = 'control-row';
     displayRow.append(sliderLabel, valueDisplay);
     sliderRow.appendChild(blockSlider);
-    blockForm.append(optionRow, displayRow);
+    blockForm.append(optionRow, displayRow, sliderRow);
 
     const updateSlider = () => {
       const mode = blockForm.querySelector('input[name="block-mode"]:checked').value;
@@ -285,14 +285,34 @@ function renderActionPanel() {
   }
 
   if (state.selectedAction === 'attack') {
-    title = 'Autoataque (daño al propio jugador)';
-    controlNode = createSliderAction(`Selecciona el daño a aplicarte`, 1, active.maxHp, 1, value => {
-      // Damage affects the active player (self-inflicted)
+    title = 'Atacar al rival';
+    controlNode = createSliderAction(`Selecciona el daño para ${opponent.name}`, 1, active.maxHp, 1, value => {
+      let remainingDamage = value;
+      let blockUsed = 0;
+      if (opponent.block > 0) {
+        blockUsed = Math.min(opponent.block, remainingDamage);
+        opponent.block = Math.max(0, opponent.block - blockUsed);
+        remainingDamage -= blockUsed;
+      }
+      if (remainingDamage > 0) {
+        opponent.hp = Math.max(opponent.hp - remainingDamage, 0);
+      }
+      const blockText = blockUsed > 0 ? `${blockUsed} al bloqueo` : '';
+      const lifeText = remainingDamage > 0 ? `${remainingDamage} a la vida` : '';
+      const parts = [blockText, lifeText].filter(Boolean).join(' y ');
+      const detail = `Vida restante: ${opponent.hp}/${opponent.maxHp}; bloqueo restante: ${opponent.block}`;
+      afterAction(`${active.name} inflige ${value} de daño a ${opponent.name} (${parts}). ${detail}`);
+    });
+  }
+
+  if (state.selectedAction === 'self-damage') {
+    title = 'Autodaño';
+    controlNode = createSliderAction(`Selecciona el daño que te infliges`, 1, active.maxHp, 1, value => {
       let remainingDamage = value;
       let blockUsed = 0;
       if (active.block > 0) {
         blockUsed = Math.min(active.block, remainingDamage);
-        active.block -= blockUsed;
+        active.block = Math.max(0, active.block - blockUsed);
         remainingDamage -= blockUsed;
       }
       if (remainingDamage > 0) {
@@ -301,20 +321,23 @@ function renderActionPanel() {
       const blockText = blockUsed > 0 ? `${blockUsed} al bloqueo` : '';
       const lifeText = remainingDamage > 0 ? `${remainingDamage} a la vida` : '';
       const parts = [blockText, lifeText].filter(Boolean).join(' y ');
-      afterAction(`${active.name} recibe ${value} de daño (${parts}).`);
+      const detail = `Vida restante: ${active.hp}/${active.maxHp}; bloqueo restante: ${active.block}`;
+      afterAction(`${active.name} se inflige ${value} de daño (${parts}). ${detail}`);
     });
   }
 
   if (state.selectedAction === 'pass') {
     title = 'Pasar (ganar stamina)';
     controlNode = createSliderAction('Selecciona cuánto stamina ganar', 1, 30, 1, value => {
-      const prev = active.stamina;
       active.stamina = active.stamina + value;
-      afterAction(`${active.name} gana ${value} de stamina (ahora ${active.stamina}/${active.maxStamina}).`);
+      const message = `${active.name} gana ${value} de stamina (ahora ${active.stamina}/${active.maxStamina}).`;
       if (active.stamina > active.maxStamina) {
-        // show prompt to increase max stamina
-        showIncreaseMaxPrompt(active, value);
+        state.selectedAction = 'pass';
+        afterAction(message, true);
+        setTimeout(() => showIncreaseMaxPrompt(active), 0);
+        return;
       }
+      afterAction(message);
     });
   }
 
@@ -354,10 +377,12 @@ function createSliderAction(label, min, max, value, callback) {
   return wrapper;
 }
 
-function afterAction(message) {
+function afterAction(message, keepPanel = false) {
   // Record action in the fight log but DO NOT switch turn automatically.
   updateLog(message);
-  state.selectedAction = null;
+  if (!keepPanel) {
+    state.selectedAction = null;
+  }
   checkGameEnd();
   render();
 }
