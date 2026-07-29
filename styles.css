@@ -170,11 +170,11 @@ button {
 
 .action-row-top,
 .action-row-bottom {
-  grid-template-columns: repeat(2, minmax(140px, 1fr));
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
 }
 
 .action-row-middle {
-  grid-template-columns: repeat(3, minmax(140px, 1fr));
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
 }
 
 .status-card {
@@ -230,7 +230,7 @@ button {
   font-weight: 700;
 }
 
-..status-card progress {
+.status-card progress {
   width: 100%;
   height: 10px;
   appearance: none;
