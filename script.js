@@ -26,12 +26,15 @@ function createEmptyPlayer() {
 
 function init() {
   qa('[id^="save-player-"]').forEach(button => button.addEventListener('click', handleSavePlayer));
+  qa('.player-title-button').forEach(button => button.addEventListener('click', handlePlayerTitleEdit));
+  qa('.attribute-pill').forEach(button => button.addEventListener('click', handleAttributeEdit));
   q('#start-duel').addEventListener('click', showRollScreen);
   q('#roll-button').addEventListener('click', rollDice);
   q('#confirm-start').addEventListener('click', startBattle);
   q('#restart-button').addEventListener('click', resetGame);
   qa('.status-card').forEach(card => card.addEventListener('click', handleActionSelect));
   q('#end-turn').addEventListener('click', finalizeTurn);
+  q('#fullscreen-button').addEventListener('click', toggleFullscreen);
   const restart2 = q('#restart-button-2');
   if (restart2) restart2.addEventListener('click', resetGame);
   render();
@@ -52,7 +55,7 @@ function handleSavePlayer(event) {
     alert('Escribe el nombre del jugador.');
     return;
   }
-  if (maxHp < 1 || maxStamina < 1 || dex < 1 || dex > 5) {
+  if (maxHp < 1 || maxStamina < 1 || dex < -5 || dex > 5) {
     alert('Valores inválidos. Verifica vida, stamina y destreza.');
     return;
   }
@@ -70,6 +73,7 @@ function handleSavePlayer(event) {
 
   q(`#save-player-${index}`).textContent = `Jugador ${index + 1} guardado`;
   q(`#save-player-${index}`).disabled = true;
+  syncSetupUI();
   render();
 }
 
@@ -131,15 +135,95 @@ function resetGame() {
   q('#save-player-1').textContent = 'Guardar jugador 2';
   q('#save-player-0').disabled = false;
   q('#save-player-1').disabled = false;
-  q('#player-0-name').value = '';
-  q('#player-0-hp').value = '20';
-  q('#player-0-stamina').value = '10';
-  q('#player-0-dex').value = '3';
-  q('#player-1-name').value = '';
-  q('#player-1-hp').value = '20';
-  q('#player-1-stamina').value = '10';
-  q('#player-1-dex').value = '3';
+  syncSetupUI();
   render();
+}
+
+function syncSetupUI() {
+  for (let index = 0; index < players.length; index++) {
+    const player = players[index];
+    const titleButton = q(`#player-${index}-title`);
+    const nameInput = q(`#player-${index}-name`);
+    const hpInput = q(`#player-${index}-hp`);
+    const staminaInput = q(`#player-${index}-stamina`);
+    const dexInput = q(`#player-${index}-dex`);
+    const saveButton = q(`#save-player-${index}`);
+
+    if (titleButton) {
+      titleButton.textContent = player.name || `Jugador ${index + 1}`;
+    }
+    if (nameInput) nameInput.value = player.name || '';
+    if (hpInput) hpInput.value = String(player.maxHp);
+    if (staminaInput) staminaInput.value = String(player.maxStamina);
+    if (dexInput) dexInput.value = String(player.dex);
+    if (saveButton) {
+      saveButton.textContent = player.saved ? `Jugador ${index + 1} guardado` : `Guardar jugador ${index + 1}`;
+      saveButton.disabled = Boolean(player.saved);
+    }
+
+    const hpButton = q(`#player-${index}-card .attribute-pill[data-attr="hp"]`);
+    const staminaButton = q(`#player-${index}-card .attribute-pill[data-attr="stamina"]`);
+    const dexButton = q(`#player-${index}-card .attribute-pill[data-attr="dex"]`);
+    if (hpButton) hpButton.textContent = `Vida: ${player.maxHp}`;
+    if (staminaButton) staminaButton.textContent = `Stamina: ${player.maxStamina}`;
+    if (dexButton) dexButton.textContent = `Destreza: ${player.dex}`;
+  }
+}
+
+function handlePlayerTitleEdit(event) {
+  const index = Number(event.currentTarget.dataset.player);
+  const current = players[index].name || `Jugador ${index + 1}`;
+  const value = window.prompt('Nombre del jugador', current);
+  if (value === null) return;
+  players[index].name = value.trim() || current;
+  syncSetupUI();
+}
+
+function handleAttributeEdit(event) {
+  const index = Number(event.currentTarget.dataset.player);
+  const attr = event.currentTarget.dataset.attr;
+  let currentValue = 0;
+  let min = 1;
+  let max = 20;
+  let label = '';
+
+  if (attr === 'hp') {
+    currentValue = players[index].maxHp;
+    label = 'Vida máxima';
+    max = 200;
+  } else if (attr === 'stamina') {
+    currentValue = players[index].maxStamina;
+    label = 'Stamina máxima';
+    max = 100;
+  } else if (attr === 'dex') {
+    currentValue = players[index].dex;
+    label = 'Destreza';
+    min = -5;
+    max = 5;
+  }
+
+  const value = window.prompt(`${label} (${min} a ${max})`, String(currentValue));
+  if (value === null) return;
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return;
+  if (attr === 'hp') {
+    players[index].maxHp = Math.max(min, Math.min(max, numeric));
+    players[index].hp = players[index].maxHp;
+  } else if (attr === 'stamina') {
+    players[index].maxStamina = Math.max(min, Math.min(max, numeric));
+    players[index].stamina = players[index].maxStamina;
+  } else if (attr === 'dex') {
+    players[index].dex = Math.max(min, Math.min(max, numeric));
+  }
+  syncSetupUI();
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen?.();
+  } else {
+    document.exitFullscreen?.();
+  }
 }
 
 function render() {
@@ -147,6 +231,10 @@ function render() {
   q('#roll-screen').classList.toggle('active-screen', state.phase === 'roll');
   q('#battle-screen').classList.toggle('active-screen', state.phase === 'battle');
   q('#start-duel').disabled = !(players[0].saved && players[1].saved);
+
+  if (state.phase === 'setup') {
+    syncSetupUI();
+  }
 
   if (state.phase === 'roll') {
     q('#roll-text').textContent = `Toca lanzar el dado para ver quién comienza.`;
@@ -329,17 +417,13 @@ function renderActionPanel() {
   if (state.selectedAction === 'pass') {
     title = 'Pasar (ganar stamina)';
     controlNode = createSliderAction('Selecciona cuánto stamina ganar', 1, 30, 1, value => {
-      const previous = active.stamina;
-      const next = Math.min(active.maxStamina, active.stamina + value);
-      const overflow = Math.max(0, previous + value - active.maxStamina);
-      active.stamina = next;
-      const message = `${active.name} gana ${value} de stamina (ahora ${active.stamina}/${active.maxStamina}).`;
-      if (overflow > 0) {
-        const cappedMessage = `${active.name} intenta ganar ${value}, pero solo se le permite llegar a ${active.maxStamina} de stamina. El exceso (${overflow}) no se suma.`;
-        afterAction(cappedMessage);
+      const requested = active.stamina + value;
+      if (requested <= active.maxStamina) {
+        active.stamina = requested;
+        afterAction(`${active.name} gana ${value} de stamina (ahora ${active.stamina}/${active.maxStamina}).`);
         return;
       }
-      afterAction(message);
+      showIncreaseMaxPrompt(active, requested, value);
     });
   }
 
@@ -420,20 +504,19 @@ function finalizeTurn() {
   render();
 }
 
-function showIncreaseMaxPrompt(player, added) {
+function showIncreaseMaxPrompt(player, requestedValue, addedValue) {
   const panel = q('#action-panel');
   const modal = document.createElement('div');
   modal.className = 'action-controls';
   modal.style.marginTop = '12px';
   const msg = document.createElement('p');
-  msg.textContent = `La stamina actual (${player.stamina}) excede la stamina máxima (${player.maxStamina}). ¿Deseas aumentar la stamina máxima?`;
+  msg.textContent = `${player.name} intenta ganar ${addedValue} de stamina, lo que llevaría su stamina a ${requestedValue} (máximo actual ${player.maxStamina}). ¿Deseas aumentar la stamina máxima?`;
   const controls = document.createElement('div');
   controls.className = 'control-row';
   const yesBtn = document.createElement('button');
   yesBtn.className = 'secondary-button';
   yesBtn.textContent = 'Sí';
   const noBtn = document.createElement('button');
-  // "No" resaltada según tu petición: la mostramos como botón primario
   noBtn.className = 'primary-button';
   noBtn.textContent = 'No';
   controls.appendChild(yesBtn);
@@ -443,16 +526,16 @@ function showIncreaseMaxPrompt(player, added) {
   panel.appendChild(modal);
 
   yesBtn.addEventListener('click', () => {
-    // aumentar la stamina máxima para acomodar el valor actual
-    player.maxStamina = player.stamina;
-    updateLog(`${player.name} aumenta stamina máxima a ${player.maxStamina}.`);
+    player.maxStamina = requestedValue;
+    player.stamina = requestedValue;
+    updateLog(`${player.name} aumenta su stamina máxima a ${requestedValue}.`);
     panel.removeChild(modal);
     render();
   });
 
   noBtn.addEventListener('click', () => {
-    // no aumenta la stamina máxima; dejar la stamina actual como está (puede seguir > max)
-    updateLog(`${player.name} decidió no aumentar la stamina máxima.`);
+    player.stamina = player.maxStamina;
+    updateLog(`${player.name} decide no aumentar la stamina máxima y se queda con ${player.stamina}/${player.maxStamina}.`);
     panel.removeChild(modal);
     render();
   });

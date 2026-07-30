@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>Duelo de Cartas</title>
-  <link rel="stylesheet" href="styles.css?v=20260729-2" />
+  <link rel="stylesheet" href="styles.css?v=20260730-1" />
 </head>
 <body>
   <main class="app-shell">
@@ -19,20 +19,25 @@
     <section id="setup-screen" class="screen active-screen">
       <div class="setup-row">
         <article class="player-card" id="player-0-card">
-          <h2>Jugador 1</h2>
-          <div class="field-group">
+          <button class="player-title-button" data-player="0" id="player-0-title" type="button">Jugador 1</button>
+          <div class="attribute-buttons-row">
+            <button class="attribute-pill" data-player="0" data-attr="hp" type="button">Vida: 20</button>
+            <button class="attribute-pill" data-player="0" data-attr="stamina" type="button">Stamina: 10</button>
+            <button class="attribute-pill" data-player="0" data-attr="dex" type="button">Destreza: 3</button>
+          </div>
+          <div class="field-group hidden">
             <label for="player-0-name">Nombre</label>
             <input id="player-0-name" type="text" placeholder="Nombre del jugador" />
           </div>
-          <div class="field-group">
+          <div class="field-group hidden">
             <label for="player-0-hp">Vida máxima</label>
             <input id="player-0-hp" type="number" min="1" value="20" />
           </div>
-          <div class="field-group">
+          <div class="field-group hidden">
             <label for="player-0-stamina">Stamina máxima</label>
             <input id="player-0-stamina" type="number" min="1" value="10" />
           </div>
-          <div class="field-group">
+          <div class="field-group hidden">
             <label for="player-0-dex">Destreza (-5 a 5)</label>
             <input id="player-0-dex" type="number" min="-5" max="5" value="3" />
           </div>
@@ -40,20 +45,25 @@
         </article>
 
         <article class="player-card" id="player-1-card">
-          <h2>Jugador 2</h2>
-          <div class="field-group">
+          <button class="player-title-button" data-player="1" id="player-1-title" type="button">Jugador 2</button>
+          <div class="attribute-buttons-row">
+            <button class="attribute-pill" data-player="1" data-attr="hp" type="button">Vida: 20</button>
+            <button class="attribute-pill" data-player="1" data-attr="stamina" type="button">Stamina: 10</button>
+            <button class="attribute-pill" data-player="1" data-attr="dex" type="button">Destreza: 3</button>
+          </div>
+          <div class="field-group hidden">
             <label for="player-1-name">Nombre</label>
             <input id="player-1-name" type="text" placeholder="Nombre del jugador" />
           </div>
-          <div class="field-group">
+          <div class="field-group hidden">
             <label for="player-1-hp">Vida máxima</label>
             <input id="player-1-hp" type="number" min="1" value="20" />
           </div>
-          <div class="field-group">
+          <div class="field-group hidden">
             <label for="player-1-stamina">Stamina máxima</label>
             <input id="player-1-stamina" type="number" min="1" value="10" />
           </div>
-          <div class="field-group">
+          <div class="field-group hidden">
             <label for="player-1-dex">Destreza (-5 a 5)</label>
             <input id="player-1-dex" type="number" min="-5" max="5" value="3" />
           </div>
@@ -86,7 +96,6 @@
       </div>
 
       <div class="action-buttons-grid">
-        <div class="ui-banner">Distribución de acciones actualizada</div>
         <div class="action-row action-row-top">
           <button class="status-card action-health" data-action="health" id="action-health">
             <strong>Vida</strong>
@@ -121,9 +130,10 @@
         </div>
       </div>
 
-      <div style="margin-top:12px; display:flex; gap:12px;">
+      <div style="margin-top:12px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
         <button class="primary-button" id="end-turn">Finalizar acción</button>
         <button class="secondary-button" id="restart-button-2">Reiniciar</button>
+        <button class="secondary-button" id="fullscreen-button">Pantalla completa</button>
       </div>
 
       <div class="action-panel hidden" id="action-panel">
@@ -135,6 +145,6 @@
     </section>
   </main>
 
-  <script src="script.js?v=20260729-2"></script>
+  <script src="script.js?v=20260730-1"></script>
 </body>
 </html>
