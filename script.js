@@ -506,13 +506,19 @@ function renderActionPanel() {
 
   if (state.selectedAction === 'attack') {
     title = 'Atacar al rival';
-    controlNode = createSliderAction(`Selecciona el daño para ${opponent.name}`, 1, active.maxHp, 1, value => {
+    controlNode = createDamageAction(`Selecciona el daño para ${opponent.name}`, 1, active.maxHp, 1, (value, piercing) => {
       let remainingDamage = value;
       let blockUsed = 0;
-      if (opponent.block > 0) {
+      if (!piercing && opponent.block > 0) {
         blockUsed = Math.min(opponent.block, remainingDamage);
         opponent.block = Math.max(0, opponent.block - blockUsed);
         remainingDamage -= blockUsed;
+      }
+      if (piercing) {
+        opponent.hp = Math.max(opponent.hp - value, 0);
+        const detail = `Vida restante: ${opponent.hp}/${opponent.maxHp}; bloqueo restante: ${opponent.block}`;
+        afterAction(`${active.name} inflige ${value} de daño perforante a ${opponent.name}. ${detail}`);
+        return;
       }
       if (remainingDamage > 0) {
         opponent.hp = Math.max(opponent.hp - remainingDamage, 0);
@@ -527,13 +533,19 @@ function renderActionPanel() {
 
   if (state.selectedAction === 'self-damage') {
     title = 'Autodaño';
-    controlNode = createSliderAction(`Selecciona el daño que te infliges`, 1, active.maxHp, 1, value => {
+    controlNode = createDamageAction(`Selecciona el daño que te infliges`, 1, active.maxHp, 1, (value, piercing) => {
       let remainingDamage = value;
       let blockUsed = 0;
-      if (active.block > 0) {
+      if (!piercing && active.block > 0) {
         blockUsed = Math.min(active.block, remainingDamage);
         active.block = Math.max(0, active.block - blockUsed);
         remainingDamage -= blockUsed;
+      }
+      if (piercing) {
+        active.hp = Math.max(active.hp - value, 0);
+        const detail = `Vida restante: ${active.hp}/${active.maxHp}; bloqueo restante: ${active.block}`;
+        afterAction(`${active.name} se inflige ${value} de daño perforante. ${detail}`);
+        return;
       }
       if (remainingDamage > 0) {
         active.hp = Math.max(active.hp - remainingDamage, 0);
@@ -592,6 +604,50 @@ function createSliderAction(label, min, max, value, callback) {
   });
 
   wrapper.append(labelEl, valueRow, okButton);
+  return wrapper;
+}
+
+function createDamageAction(label, min, max, value, callback) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'action-controls';
+
+  const labelEl = document.createElement('label');
+  labelEl.textContent = label;
+  const valueRow = document.createElement('div');
+  valueRow.className = 'control-row';
+  const slider = document.createElement('input');
+  slider.type = 'range';
+  slider.min = min;
+  slider.max = max;
+  slider.value = value;
+  slider.id = 'action-slider';
+  const valueDisplay = document.createElement('span');
+  valueDisplay.textContent = String(value);
+  valueRow.appendChild(slider);
+  valueRow.appendChild(valueDisplay);
+
+  let piercing = false;
+  const piercingButton = document.createElement('button');
+  piercingButton.type = 'button';
+  piercingButton.className = 'secondary-button';
+  piercingButton.textContent = 'Perforante: no';
+  piercingButton.addEventListener('click', () => {
+    piercing = !piercing;
+    piercingButton.textContent = piercing ? 'Perforante: sí' : 'Perforante: no';
+    piercingButton.style.background = piercing ? '#f59e0b' : '#94a3b8';
+    piercingButton.style.color = piercing ? '#111827' : '#071025';
+  });
+
+  slider.addEventListener('input', () => { valueDisplay.textContent = slider.value; });
+
+  const okButton = document.createElement('button');
+  okButton.className = 'primary-button';
+  okButton.textContent = 'Ok';
+  okButton.addEventListener('click', () => {
+    callback(Number(slider.value), piercing);
+  });
+
+  wrapper.append(labelEl, valueRow, piercingButton, okButton);
   return wrapper;
 }
 
