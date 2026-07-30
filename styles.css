@@ -12,7 +12,11 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at top, #1e293b 0%, #020617 70%);
+  /* Fondo tipo madera sencillo: color cálido con vetas sutiles */
+  background-color: #efe6d6;
+  background-image:
+    linear-gradient(180deg, rgba(0,0,0,0.03) 0.5px, transparent 0.5px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.02) 0 2px, rgba(255,255,255,0.01) 2px 6px);
   text-align: center;
   display: flex;
   justify-content: center;
@@ -96,26 +100,26 @@ select {
 button {
   cursor: pointer;
   border: none;
-  border-radius: 12px;
-  padding: 12px 18px;
+  border-radius: 8px;
+  padding: 10px 14px;
   font-weight: 600;
   text-align: center;
   justify-content: center;
 }
 
 .primary-button {
-  background: linear-gradient(135deg, #38bdf8, #8b5cf6);
-  color: #fff;
+  background: #2b6cb0; /* azul sólido */
+  color: #ffffff;
 }
 
 .primary-button:disabled {
-  opacity: 0.45;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .secondary-button {
-  background: rgba(148, 163, 184, 0.12);
-  color: #cbd5e1;
+  background: #94a3b8; /* gris plano */
+  color: #071025;
 }
 
 .actions-row {
@@ -124,15 +128,15 @@ button {
   justify-content: center;
 }
 
-.roll-box,
-.battle-header,
-.status-grid,
-.action-panel,
-.battle-log {
-  background: rgba(15, 23, 42, 0.95);
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  border-radius: 18px;
-  padding: 20px;
+roll-box,
+battle-header,
+status-grid,
+action-panel,
+battle-log {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.08);
+  border-radius: 12px;
+  padding: 16px;
 }
 
 .roll-box {
@@ -182,14 +186,7 @@ button {
 }
 
 .ui-banner {
-  background: linear-gradient(90deg, #0f766e, #1d4ed8);
-  color: #fff;
-  padding: 10px 14px;
-  border-radius: 999px;
-  text-align: center;
-  font-size: 0.95rem;
-  font-weight: 700;
-  margin-bottom: 4px;
+  display: none; /* eliminado visualmente, ya no se usa */
 }
 
 .action-row {
@@ -215,9 +212,9 @@ button {
   align-items: center;
   gap: 12px;
   padding: 14px;
-  background: rgba(30, 41, 59, 0.95);
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.08);
+  border-radius: 8px;
   color: #e2e8f0;
   text-align: center;
   min-height: 120px;
@@ -229,33 +226,33 @@ button {
 }
 
 .action-health {
-  background: linear-gradient(135deg, #7f1d1d, #ef4444) !important;
+  background: #dc2626 !important; /* rojo */
   color: #fff !important;
 }
 
 .action-stamina {
-  background: linear-gradient(135deg, #14532d, #22c55e) !important;
+  background: #16a34a !important; /* verde */
   color: #fff !important;
 }
 
 .action-block {
-  background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+  background: #2563eb !important; /* azul */
   color: #fff !important;
 }
 
 .action-attack {
-  background: linear-gradient(135deg, #92400e, #facc15) !important;
-  color: #111827 !important;
+  background: #f59e0b !important; /* amarillo */
+  color: #081012 !important;
 }
 
 .action-self-damage {
-  background: linear-gradient(135deg, #9a2c00, #f59e0b) !important;
+  background: #fb923c !important; /* naranja */
   color: #fff !important;
 }
 
 .action-pass {
-  background: linear-gradient(135deg, #2563eb, #60a5fa) !important;
-  color: #fff !important;
+  background: #06b6d4 !important; /* cyan */
+  color: #081012 !important;
 }
 
 .status-card .stat-value {
@@ -359,7 +356,7 @@ input[type='range'] {
   }
 
   .action-row-bottom {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: 1fr;
   }
 
   .battle-header {
@@ -369,17 +366,32 @@ input[type='range'] {
 }
 
 @media (max-width: 560px) {
-  .action-row-top,
-  .action-row-middle,
+  .action-row-top {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .action-row-middle {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .action-row-bottom {
     grid-template-columns: 1fr;
   }
 
   .status-card {
-    min-height: 100px;
-    padding: 10px;
-    font-size: 0.92rem;
+    min-height: 84px;
+    padding: 8px 10px;
+    font-size: 0.8rem;
+    gap: 6px;
     width: 100%;
+  }
+
+  .status-card strong {
+    font-size: 0.78rem;
+  }
+
+  .status-card .stat-value {
+    font-size: 0.9rem;
   }
 
   .attribute-buttons-row {
