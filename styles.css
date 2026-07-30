@@ -260,22 +260,27 @@ battle-log {
   position: fixed;
   right: 12px;
   bottom: 12px;
-  background: rgba(255,255,255,0.95);
-  color: #2b2b2b;
-  border: 1px solid rgba(0,0,0,0.06);
-  width: 40px;
-  height: 40px;
+  background: rgba(0,0,0,0.6);
+  color: #ffffff;
+  border: none;
+  width: 36px;
+  height: 36px;
   border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.28);
   cursor: pointer;
   z-index: 9999;
-  opacity: 0.9;
+  opacity: 0.85;
+  font-size: 16px;
 }
 
-.fullscreen-popup:hover { opacity: 1; }
+.fullscreen-popup:hover { opacity: 1; transform: scale(1.03); }
+
+@media (max-width: 560px) {
+  .fullscreen-popup { right: 10px; bottom: 10px; width: 34px; height: 34px; font-size:14px; }
+}
 
 .status-card .stat-value {
   font-size: 1.25rem;

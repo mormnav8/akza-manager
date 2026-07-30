@@ -36,8 +36,9 @@ function init() {
   if (endBtn) endBtn.addEventListener('click', finalizeTurn);
   const fsPopup = q('#fullscreen-popup');
   if (fsPopup) {
-    // Hide if fullscreen API not supported
-    if (!document.documentElement.requestFullscreen) {
+    // Show popup only if any fullscreen API is available
+    const hasFs = !!(document.fullscreenEnabled || document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen || document.documentElement.msRequestFullscreen);
+    if (!hasFs) {
       fsPopup.style.display = 'none';
     } else {
       fsPopup.addEventListener('click', toggleFullscreen);
@@ -51,7 +52,7 @@ function init() {
 function updateFullscreenButton() {
   const fsPopup = q('#fullscreen-popup');
   if (!fsPopup) return;
-  const fs = !!document.fullscreenElement;
+  const fs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
   fsPopup.textContent = fs ? '✕' : '⤢';
   fsPopup.title = fs ? 'Salir de pantalla completa' : 'Pantalla completa';
 }
