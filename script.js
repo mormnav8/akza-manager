@@ -32,9 +32,11 @@ function init() {
   q('#roll-button').addEventListener('click', rollDice);
   q('#confirm-start').addEventListener('click', startBattle);
   q('#restart-button').addEventListener('click', resetGame);
-  qa('.status-card').forEach(card => card.addEventListener('click', handleActionSelect));
-  q('#end-turn').addEventListener('click', finalizeTurn);
-  q('#fullscreen-button').addEventListener('click', toggleFullscreen);
+  qa('.status-card[data-action]').forEach(card => card.addEventListener('click', handleActionSelect));
+  const endBtn = q('#end-turn');
+  if (endBtn) endBtn.addEventListener('click', finalizeTurn);
+  const fsPopup = q('#fullscreen-popup');
+  if (fsPopup) fsPopup.addEventListener('click', toggleFullscreen);
   const restart2 = q('#restart-button-2');
   if (restart2) restart2.addEventListener('click', resetGame);
   render();
@@ -245,6 +247,9 @@ function render() {
     const active = players[state.activeIndex];
     q('#battle-title').textContent = `Turno de ${active.name}`;
     q('#current-turn-label').textContent = `Jugador activo: ${active.name}`;
+    // Show only the active player's name in the main header
+    const title = q('#app-title');
+    if (title) title.textContent = active.name || `Jugador ${state.activeIndex + 1}`;
     q('#stat-health').textContent = `${active.hp} / ${active.maxHp}`;
     q('#health-bar').max = active.maxHp;
     q('#health-bar').value = Math.max(0, active.hp);
@@ -255,6 +260,10 @@ function render() {
     q('#action-panel').classList.toggle('hidden', !state.selectedAction || state.winner);
     renderActionPanel();
     q('#battle-log').innerHTML = renderBattleLog();
+  }
+  else {
+    const title = q('#app-title');
+    if (title) title.textContent = '';
   }
 }
 

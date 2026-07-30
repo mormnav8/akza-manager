@@ -195,10 +195,10 @@ battle-log {
 .action-buttons-grid {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 6px;
   max-width: 760px;
   margin: 0 auto;
-  align-items: center;
+  align-items: stretch;
 }
 
 .ui-banner {
@@ -207,18 +207,18 @@ battle-log {
 
 .action-row {
   display: grid;
-  gap: 16px;
+  gap: 6px;
   width: 100%;
-  justify-items: center;
+  justify-items: stretch;
 }
 
 .action-row-top,
 .action-row-bottom {
-  grid-template-columns: repeat(2, minmax(140px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
 }
 
 .action-row-middle {
-  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .status-card {
@@ -227,49 +227,49 @@ battle-log {
   justify-content: center;
   align-items: center;
   gap: 12px;
-  padding: 14px;
-  background: rgba(15, 23, 42, 0.95);
-  border: 1px solid rgba(148, 163, 184, 0.08);
+  padding: 12px;
+  background: rgba(20, 26, 34, 0.96);
+  border: 1px solid rgba(255,255,255,0.03);
   border-radius: 8px;
-  color: #e2e8f0;
+  color: #f3f4f6;
   text-align: center;
-  min-height: 120px;
-  width: min(100%, 220px);
+  min-height: 100px;
+  width: 100%;
 }
 
 .status-card strong {
   font-size: 0.95rem;
 }
 
-.action-health {
-  background: #dc2626 !important; /* rojo */
-  color: #fff !important;
+.action-health { background: #b91c1c !important; color: #fff !important; }
+.action-stamina { background: #157449 !important; color: #fff !important; }
+.action-block { background: #1e40af !important; color: #fff !important; }
+.action-attack { background: #9a4d0b !important; color: #071018 !important; }
+.action-self-damage { background: #ea5f0b !important; color: #fff !important; }
+.action-pass { background: #0891b2 !important; color: #071018 !important; }
+
+.end-turn-button { background: #ffffff !important; color: #2b2b2b !important; }
+
+.fullscreen-popup {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  background: rgba(255,255,255,0.95);
+  color: #2b2b2b;
+  border: 1px solid rgba(0,0,0,0.06);
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+  cursor: pointer;
+  z-index: 9999;
+  opacity: 0.9;
 }
 
-.action-stamina {
-  background: #16a34a !important; /* verde */
-  color: #fff !important;
-}
-
-.action-block {
-  background: #2563eb !important; /* azul */
-  color: #fff !important;
-}
-
-.action-attack {
-  background: #f59e0b !important; /* amarillo */
-  color: #081012 !important;
-}
-
-.action-self-damage {
-  background: #fb923c !important; /* naranja */
-  color: #fff !important;
-}
-
-.action-pass {
-  background: #06b6d4 !important; /* cyan */
-  color: #081012 !important;
-}
+.fullscreen-popup:hover { opacity: 1; }
 
 .status-card .stat-value {
   font-size: 1.25rem;
@@ -298,6 +298,12 @@ battle-log {
   font-size: 1.2rem;
   padding: 0;
   margin: 0;
+}
+
+#app-title {
+  margin: 0 0 6px 0;
+  font-size: 1.6rem;
+  color: #fff8f0;
 }
 
 .attribute-buttons-row {

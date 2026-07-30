@@ -12,8 +12,7 @@
 <body>
   <main class="app-shell">
     <header>
-      <h1>Duelo de Cartas</h1>
-      <p>Controla el duelo, los personajes y las acciones de cada turno.</p>
+      <h1 id="app-title"></h1>
     </header>
 
     <section id="setup-screen" class="screen active-screen">
@@ -127,17 +126,15 @@
             <strong>Pasar</strong>
             <div class="stat-value">Ganar Stamina</div>
           </button>
+          <button class="status-card end-turn-button" id="end-turn">
+            <strong>Finalizar</strong>
+            <div class="stat-value">Turno</div>
+          </button>
         </div>
       </div>
 
-      <div class="battle-controls" style="margin-top:12px;">
-        <div class="center-controls">
-          <button class="primary-button" id="end-turn">Finalizar acción</button>
-        </div>
-        <div class="right-controls">
-          <button class="secondary-button small-button" id="fullscreen-button">Pantalla</button>
-        </div>
-      </div>
+      <!-- fullscreen popup button (small, non-intrusive) -->
+      <button id="fullscreen-popup" class="fullscreen-popup" aria-label="Pantalla completa">⤢</button>
 
       <div class="action-panel hidden" id="action-panel">
         <h3 id="action-panel-title"></h3>
