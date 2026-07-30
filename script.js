@@ -31,15 +31,29 @@ function init() {
   q('#start-duel').addEventListener('click', showRollScreen);
   q('#roll-button').addEventListener('click', rollDice);
   q('#confirm-start').addEventListener('click', startBattle);
-  q('#restart-button').addEventListener('click', resetGame);
   qa('.status-card[data-action]').forEach(card => card.addEventListener('click', handleActionSelect));
   const endBtn = q('#end-turn');
   if (endBtn) endBtn.addEventListener('click', finalizeTurn);
   const fsPopup = q('#fullscreen-popup');
-  if (fsPopup) fsPopup.addEventListener('click', toggleFullscreen);
+  if (fsPopup) {
+    // Hide if fullscreen API not supported
+    if (!document.documentElement.requestFullscreen) {
+      fsPopup.style.display = 'none';
+    } else {
+      fsPopup.addEventListener('click', toggleFullscreen);
+    }
+  }
   const restart2 = q('#restart-button-2');
   if (restart2) restart2.addEventListener('click', resetGame);
   render();
+}
+
+function updateFullscreenButton() {
+  const fsPopup = q('#fullscreen-popup');
+  if (!fsPopup) return;
+  const fs = !!document.fullscreenElement;
+  fsPopup.textContent = fs ? '✕' : '⤢';
+  fsPopup.title = fs ? 'Salir de pantalla completa' : 'Pantalla completa';
 }
 
 function handleSavePlayer(event) {
@@ -550,4 +564,6 @@ function showIncreaseMaxPrompt(player, requestedValue, addedValue) {
   });
 }
 
+document.addEventListener('fullscreenchange', updateFullscreenButton);
 init();
+updateFullscreenButton();
