@@ -347,6 +347,7 @@ input[type='range'] {
 }
 
 @media (max-width: 720px) {
+  /* Compact 2-3-1 layout with almost-square action buttons */
   .action-row-top {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -359,6 +360,14 @@ input[type='range'] {
     grid-template-columns: 1fr;
   }
 
+  .status-card {
+    min-height: auto;
+    padding: 8px;
+    font-size: 0.78rem;
+    width: 84px;
+    aspect-ratio: 1 / 1;
+    gap: 6px;
+  }
   .battle-header {
     flex-direction: column;
     align-items: center;
