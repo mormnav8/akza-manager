@@ -235,11 +235,20 @@ function handleAttributeEdit(event) {
 }
 
 function toggleFullscreen() {
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen?.();
+  const el = document.documentElement;
+  const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+  if (!isFs) {
+    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    if (req) {
+      try { req.call(el); } catch (e) { console.warn('Fullscreen request failed', e); }
+    } else {
+      alert('Pantalla completa no está disponible en este navegador.');
+    }
   } else {
-    document.exitFullscreen?.();
+    const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+    if (exit) exit.call(document);
   }
+  setTimeout(updateFullscreenButton, 100);
 }
 
 function render() {

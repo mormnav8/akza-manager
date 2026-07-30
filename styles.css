@@ -408,22 +408,32 @@ input[type='range'] {
     grid-template-columns: 1fr;
   }
 
-  /* Top row: rectangular, less tall */
+  /* Top row: two equal cards that touch */
+  .action-row-top {
+    display: flex;
+    gap: 0;
+  }
   .action-row-top .status-card {
-    padding: 6px 8px;
-    font-size: 0.82rem;
-    min-height: 44px;
-    width: 100%;
-    aspect-ratio: auto;
+    padding: 8px 10px;
+    font-size: 0.86rem;
+    min-height: 48px;
+    width: 50%;
+    border-radius: 6px 6px 0 0;
+    margin: 0;
   }
 
-  /* Middle row: compact squares */
+  /* Middle row: three equal buttons that touch */
+  .action-row-middle {
+    display: flex;
+    gap: 0;
+  }
   .action-row-middle .status-card {
-    padding: 8px;
+    padding: 8px 6px;
     font-size: 0.78rem;
-    width: 100%;
-    aspect-ratio: auto;
-    gap: 6px;
+    width: 33.3333%;
+    min-height: 72px;
+    border-radius: 0;
+    margin: 0;
   }
 
   /* Bottom (pass) button: less tall */
@@ -433,11 +443,8 @@ input[type='range'] {
     width: 100%;
   }
 
-  /* Remove gaps so cards touch horizontally */
-  .action-row-top, .action-row-middle { gap: 0; }
-  .action-row-top .status-card:first-child { border-top-right-radius: 0; border-bottom-right-radius: 0; }
-  .action-row-top .status-card:last-child { border-top-left-radius: 0; border-bottom-left-radius: 0; }
-  .action-row-middle .status-card { border-radius: 0; }
+  /* Bottom (pass) button already full width */
+  .action-row-bottom .status-card { border-radius: 0 0 6px 6px; }
 
   .status-card strong { font-size: 0.78rem; }
 
