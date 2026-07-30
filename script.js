@@ -3,7 +3,7 @@ let characters = JSON.parse(localStorage.getItem('akz_characters') || '[]');
 function saveCharacters() { localStorage.setItem('akz_characters', JSON.stringify(characters)); }
 const state = {
   activeIndex: 0,
-  phase: 'setup',
+  phase: 'home',
   selectedAction: null,
   rollResults: null,
   winner: null,
@@ -54,6 +54,7 @@ function init() {
   }
   const restart2 = q('#restart-button-2');
   if (restart2) restart2.addEventListener('click', resetGame);
+  renderHome();
   render();
 }
 
@@ -234,7 +235,7 @@ function handleActionSelect(event) {
 function resetGame() {
   players[0] = createEmptyPlayer();
   players[1] = createEmptyPlayer();
-  state.phase = 'setup';
+  state.phase = 'home';
   state.activeIndex = 0;
   state.selectedAction = null;
   state.rollResults = null;
@@ -346,6 +347,7 @@ function toggleFullscreen() {
 }
 
 function render() {
+  q('#home-screen').classList.toggle('active-screen', state.phase === 'home');
   q('#setup-screen').classList.toggle('active-screen', state.phase === 'setup');
   q('#roll-screen').classList.toggle('active-screen', state.phase === 'roll');
   q('#battle-screen').classList.toggle('active-screen', state.phase === 'battle');
@@ -353,6 +355,11 @@ function render() {
 
   if (state.phase === 'setup') {
     syncSetupUI();
+  }
+
+  if (state.phase === 'home') {
+    renderHome();
+    const title = q('#app-title'); if (title) title.textContent = 'Duelo de Cartas';
   }
 
   if (state.phase === 'roll') {
@@ -377,10 +384,9 @@ function render() {
     q('#action-panel').classList.toggle('hidden', !state.selectedAction || state.winner);
     renderActionPanel();
     q('#battle-log').innerHTML = renderBattleLog();
-  }
-  else {
+  } else {
     const title = q('#app-title');
-    if (title) title.textContent = '';
+    if (title && state.phase !== 'battle') title.textContent = 'Duelo de Cartas';
   }
 }
 
