@@ -1,4 +1,6 @@
 const players = [createEmptyPlayer(), createEmptyPlayer()];
+let characters = JSON.parse(localStorage.getItem('akz_characters') || '[]');
+function saveCharacters() { localStorage.setItem('akz_characters', JSON.stringify(characters)); }
 const state = {
   activeIndex: 0,
   phase: 'setup',
@@ -31,6 +33,12 @@ function init() {
   q('#start-duel').addEventListener('click', showRollScreen);
   q('#roll-button').addEventListener('click', rollDice);
   q('#confirm-start').addEventListener('click', startBattle);
+  const createBtn = q('#create-character');
+  if (createBtn) createBtn.addEventListener('click', createCharacter);
+  const viewHist = q('#view-history');
+  if (viewHist) viewHist.addEventListener('click', toggleHistory);
+  const startSel = q('#start-battle-selected');
+  if (startSel) startSel.addEventListener('click', startBattleSelected);
   qa('.status-card[data-action]').forEach(card => card.addEventListener('click', handleActionSelect));
   const endBtn = q('#end-turn');
   if (endBtn) endBtn.addEventListener('click', finalizeTurn);
@@ -46,6 +54,91 @@ function init() {
   }
   const restart2 = q('#restart-button-2');
   if (restart2) restart2.addEventListener('click', resetGame);
+  render();
+}
+
+function createCharacter() {
+  const name = window.prompt('Nombre del nuevo personaje');
+  if (!name) return;
+  const hp = Number(window.prompt('Vida máxima', '20')) || 20;
+  const stamina = Number(window.prompt('Stamina máxima', '10')) || 10;
+  const dex = Number(window.prompt('Destreza (-5 a 5)', '3')) || 3;
+  const c = { name: name.trim(), maxHp: hp, hp: hp, maxStamina: stamina, stamina: stamina, dex: dex };
+  characters.push(c);
+  saveCharacters();
+  renderHome();
+}
+
+function editCharacter(idx) {
+  const c = characters[idx];
+  if (!c) return;
+  const name = window.prompt('Nombre', c.name);
+  if (name !== null) c.name = name.trim() || c.name;
+  const hp = window.prompt('Vida máxima', String(c.maxHp));
+  if (hp !== null) { const n = Number(hp); if (Number.isFinite(n) && n>0) { c.maxHp = n; c.hp = Math.min(c.hp, c.maxHp); } }
+  const stam = window.prompt('Stamina máxima', String(c.maxStamina));
+  if (stam !== null) { const n = Number(stam); if (Number.isFinite(n) && n>0) { c.maxStamina = n; c.stamina = Math.min(c.stamina, c.maxStamina); } }
+  const dex = window.prompt('Destreza (-5 a 5)', String(c.dex||3));
+  if (dex !== null) { const n = Number(dex); if (Number.isFinite(n)) c.dex = Math.max(-5, Math.min(5, n)); }
+  saveCharacters();
+  renderHome();
+}
+
+function renderHome() {
+  const list = q('#home-list');
+  if (!list) return;
+  list.innerHTML = '';
+  if (characters.length === 0) {
+    list.innerHTML = '<p class="muted">No hay personajes. Crea uno nuevo.</p>';
+    return;
+  }
+  characters.forEach((c, i) => {
+    const card = document.createElement('div');
+    card.style.display = 'flex';
+    card.style.alignItems = 'center';
+    card.style.justifyContent = 'space-between';
+    card.style.padding = '8px';
+    card.style.margin = '6px 0';
+    card.style.background = 'rgba(15,23,42,0.6)';
+    card.style.borderRadius = '8px';
+    const left = document.createElement('div');
+    left.innerHTML = `<strong>${c.name}</strong><div class="muted">Vida ${c.maxHp} · Stamina ${c.maxStamina} · Dex ${c.dex}</div>`;
+    const right = document.createElement('div');
+    right.style.display = 'flex'; right.style.gap = '6px';
+    const sel = document.createElement('input'); sel.type = 'checkbox'; sel.dataset.idx = String(i); sel.className = 'select-char';
+    const edit = document.createElement('button'); edit.className = 'small-button secondary-button'; edit.textContent = 'Editar'; edit.dataset.idx = String(i);
+    edit.addEventListener('click', () => editCharacter(i));
+    right.appendChild(sel); right.appendChild(edit);
+    card.appendChild(left); card.appendChild(right);
+    list.appendChild(card);
+  });
+}
+
+function toggleHistory() {
+  const el = q('#history-list');
+  if (!el) return;
+  if (el.classList.contains('hidden')) {
+    const hist = JSON.parse(localStorage.getItem('akz_battles') || '[]');
+    if (hist.length === 0) el.innerHTML = '<p class="muted">No hay historial.</p>';
+    else el.innerHTML = hist.map(h => `<div style="margin-bottom:6px">${new Date(h.time).toLocaleString()}: <strong>${h.winner}</strong> vs ${h.loser}</div>`).join('');
+    el.classList.remove('hidden');
+  } else {
+    el.classList.add('hidden');
+  }
+}
+
+function startBattleSelected() {
+  const checks = Array.from(document.querySelectorAll('.select-char:checked'));
+  if (checks.length !== 2) { alert('Selecciona exactamente dos personajes para iniciar la batalla.'); return; }
+  const a = characters[Number(checks[0].dataset.idx)];
+  const b = characters[Number(checks[1].dataset.idx)];
+  if (!a || !b) return;
+  // copy into players
+  players[0] = { ...a, saved: true, block: 0, hp: a.maxHp };
+  players[1] = { ...b, saved: true, block: 0, hp: b.maxHp };
+  state.phase = 'roll';
+  state.rollResults = null;
+  state.battleLog = [];
   render();
 }
 
@@ -523,6 +616,12 @@ function checkGameEnd() {
       state.winner = players[1 - i] || players[i];
       q('#action-panel').classList.add('hidden');
       updateLog(`${state.winner.name} ha ganado el duelo.`);
+      // persist history
+      try {
+        const hist = JSON.parse(localStorage.getItem('akz_battles') || '[]');
+        hist.unshift({ time: Date.now(), winner: state.winner.name, loser: players[i].name });
+        localStorage.setItem('akz_battles', JSON.stringify(hist.slice(0,200)));
+      } catch (e) { console.warn('hist save failed', e); }
       return true;
     }
   }

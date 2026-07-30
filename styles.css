@@ -401,55 +401,20 @@ input[type='range'] {
 }
 
 @media (max-width: 560px) {
-  .action-row-top {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  .action-row-top { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .action-row-middle { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .action-row-bottom { grid-template-columns: 1fr; }
 
-  .action-row-middle {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+  /* Top row: two equal cards with small gap and rounded rects */
+  .action-row-top { display:flex; gap:6px; justify-content:center; }
+  .action-row-top .status-card { padding:8px 10px; font-size:0.86rem; min-height:48px; width:calc(50% - 3px); border-radius:10px; margin:0; }
 
-  .action-row-bottom {
-    grid-template-columns: 1fr;
-  }
+  /* Middle row: three equal buttons with small gaps */
+  .action-row-middle { display:flex; gap:6px; justify-content:center; }
+  .action-row-middle .status-card { padding:8px 6px; font-size:0.78rem; width:calc(33.3333% - 4px); min-height:72px; border-radius:10px; margin:0; }
 
-  /* Top row: two equal cards that touch */
-  .action-row-top {
-    display: flex;
-    gap: 0;
-  }
-  .action-row-top .status-card {
-    padding: 8px 10px;
-    font-size: 0.86rem;
-    min-height: 48px;
-    width: 50%;
-    border-radius: 6px 6px 0 0;
-    margin: 0;
-  }
-
-  /* Middle row: three equal buttons that touch */
-  .action-row-middle {
-    display: flex;
-    gap: 0;
-  }
-  .action-row-middle .status-card {
-    padding: 8px 6px;
-    font-size: 0.78rem;
-    width: 33.3333%;
-    min-height: 72px;
-    border-radius: 0;
-    margin: 0;
-  }
-
-  /* Bottom (pass) button: less tall */
-  .action-row-bottom .status-card {
-    padding: 8px 10px;
-    min-height: 44px;
-    width: 100%;
-  }
-
-  /* Bottom (pass) button already full width */
-  .action-row-bottom .status-card { border-radius: 0 0 6px 6px; }
+  /* Bottom (pass) button: full width, slightly separated downward */
+  .action-row-bottom .status-card { padding:8px 10px; min-height:44px; width:100%; border-radius:10px; margin-top:6px; }
 
   .status-card strong { font-size: 0.78rem; }
 
