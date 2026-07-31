@@ -36,6 +36,7 @@
             <button class="attribute-pill" data-player="0" data-attr="hp" type="button">Vida: 20</button>
             <button class="attribute-pill" data-player="0" data-attr="stamina" type="button">Stamina: 10</button>
             <button class="attribute-pill" data-player="0" data-attr="dex" type="button">Destreza: 3</button>
+            <button class="attribute-pill" data-player="0" data-attr="turns" type="button">Turnos: 3</button>
           </div>
           <div class="field-group hidden">
             <label for="player-0-name">Nombre</label>
@@ -53,6 +54,10 @@
             <label for="player-0-dex">Destreza (-5 a 5)</label>
             <input id="player-0-dex" type="number" min="-5" max="5" value="3" />
           </div>
+          <div class="field-group hidden">
+            <label for="player-0-turns">Turnos</label>
+            <input id="player-0-turns" type="number" min="0" value="3" />
+          </div>
           <button class="primary-button" data-player="0" id="save-player-0">Guardar jugador 1</button>
         </article>
 
@@ -62,6 +67,7 @@
             <button class="attribute-pill" data-player="1" data-attr="hp" type="button">Vida: 20</button>
             <button class="attribute-pill" data-player="1" data-attr="stamina" type="button">Stamina: 10</button>
             <button class="attribute-pill" data-player="1" data-attr="dex" type="button">Destreza: 3</button>
+            <button class="attribute-pill" data-player="1" data-attr="turns" type="button">Turnos: 3</button>
           </div>
           <div class="field-group hidden">
             <label for="player-1-name">Nombre</label>
@@ -78,6 +84,10 @@
           <div class="field-group hidden">
             <label for="player-1-dex">Destreza (-5 a 5)</label>
             <input id="player-1-dex" type="number" min="-5" max="5" value="3" />
+          </div>
+          <div class="field-group hidden">
+            <label for="player-1-turns">Turnos</label>
+            <input id="player-1-turns" type="number" min="0" value="3" />
           </div>
           <button class="primary-button" data-player="1" id="save-player-1">Guardar jugador 2</button>
         </article>
@@ -145,6 +155,15 @@
             </button>
           </div>
         </div>
+      </div>
+
+      <div class="battle-footer">
+        <div class="turn-counter-row">
+          <button class="small-button secondary-button" id="turns-minus" type="button">-1 turno</button>
+          <span id="turns-remaining-value" class="turns-chip">Turnos: 3</span>
+          <button class="small-button secondary-button" id="turns-plus" type="button">+1 turno</button>
+        </div>
+        <button class="secondary-button hidden" id="back-to-lobby" type="button">Volver al lobby</button>
       </div>
 
       <!-- fullscreen popup button (small, non-intrusive) -->

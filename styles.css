@@ -365,6 +365,29 @@ input[type='range'] {
   color: #cbd5e1;
 }
 
+.battle-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.turn-counter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+
+.turns-chip {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+  color: #f8fafc;
+  font-weight: 600;
+}
+
 .battle-log {
   margin-top: 24px;
   min-height: 96px;

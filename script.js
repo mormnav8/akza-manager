@@ -21,6 +21,7 @@ function createEmptyPlayer() {
     maxStamina: 10,
     stamina: 10,
     dex: 3,
+    turns: 3,
     block: 0,
     saved: false,
   };
@@ -35,6 +36,9 @@ function init() {
   q('#confirm-start').addEventListener('click', startBattle);
   const createBtn = q('#create-character');
   if (createBtn) createBtn.addEventListener('click', createCharacter);
+  q('#turns-plus').addEventListener('click', () => adjustTurnCount(1));
+  q('#turns-minus').addEventListener('click', () => adjustTurnCount(-1));
+  q('#back-to-lobby').addEventListener('click', () => { state.phase = 'home'; state.winner = null; render(); });
   const viewHist = q('#view-history');
   if (viewHist) viewHist.addEventListener('click', toggleHistory);
   const startSel = q('#start-battle-selected');
@@ -64,7 +68,8 @@ function createCharacter() {
   const hp = Number(window.prompt('Vida máxima', '20')) || 20;
   const stamina = Number(window.prompt('Stamina máxima', '10')) || 10;
   const dex = Number(window.prompt('Destreza (-5 a 5)', '3')) || 3;
-  const c = { name: name.trim(), maxHp: hp, hp: hp, maxStamina: stamina, stamina: stamina, dex: dex };
+  const turns = Number(window.prompt('Turnos iniciales', '3')) || 3;
+  const c = { name: name.trim(), maxHp: hp, hp: hp, maxStamina: stamina, stamina: stamina, dex: dex, turns: Math.max(0, turns) };
   characters.push(c);
   saveCharacters();
   renderHome();
@@ -81,6 +86,8 @@ function editCharacter(idx) {
   if (stam !== null) { const n = Number(stam); if (Number.isFinite(n) && n>0) { c.maxStamina = n; c.stamina = Math.min(c.stamina, c.maxStamina); } }
   const dex = window.prompt('Destreza (-5 a 5)', String(c.dex||3));
   if (dex !== null) { const n = Number(dex); if (Number.isFinite(n)) c.dex = Math.max(-5, Math.min(5, n)); }
+  const turns = window.prompt('Turnos', String(c.turns ?? 3));
+  if (turns !== null) { const n = Number(turns); if (Number.isFinite(n)) c.turns = Math.max(0, n); }
   saveCharacters();
   renderHome();
 }
@@ -135,8 +142,26 @@ function startBattleSelected() {
   const b = characters[Number(checks[1].dataset.idx)];
   if (!a || !b) return;
   // copy into players
-  players[0] = { ...a, saved: true, block: 0, hp: a.maxHp };
-  players[1] = { ...b, saved: true, block: 0, hp: b.maxHp };
+  players[0] = {
+    ...a,
+    saved: true,
+    block: 0,
+    hp: a.maxHp,
+    maxHp: a.maxHp,
+    maxStamina: a.maxStamina,
+    stamina: a.maxStamina,
+    turns: a.turns ?? 3,
+  };
+  players[1] = {
+    ...b,
+    saved: true,
+    block: 0,
+    hp: b.maxHp,
+    maxHp: b.maxHp,
+    maxStamina: b.maxStamina,
+    stamina: b.maxStamina,
+    turns: b.turns ?? 3,
+  };
   state.phase = 'roll';
   state.rollResults = null;
   state.battleLog = [];
@@ -161,6 +186,8 @@ function handleSavePlayer(event) {
   const maxHp = Number(hpEl.value);
   const maxStamina = Number(staminaEl.value);
   const dex = Number(dexEl.value);
+  const turnsEl = q(`#player-${index}-turns`);
+  const turns = Number(turnsEl ? turnsEl.value : 3);
 
   if (!name) {
     alert('Escribe el nombre del jugador.');
@@ -178,6 +205,7 @@ function handleSavePlayer(event) {
     maxStamina,
     stamina: maxStamina,
     dex,
+    turns: Math.max(0, turns),
     block: 0,
     saved: true,
   };
@@ -246,6 +274,7 @@ function resetGame() {
   q('#save-player-1').textContent = 'Guardar jugador 2';
   q('#save-player-0').disabled = false;
   q('#save-player-1').disabled = false;
+  q('#back-to-lobby').classList.add('hidden');
   syncSetupUI();
   render();
 }
@@ -258,6 +287,7 @@ function syncSetupUI() {
     const hpInput = q(`#player-${index}-hp`);
     const staminaInput = q(`#player-${index}-stamina`);
     const dexInput = q(`#player-${index}-dex`);
+    const turnsInput = q(`#player-${index}-turns`);
     const saveButton = q(`#save-player-${index}`);
 
     if (titleButton) {
@@ -267,6 +297,7 @@ function syncSetupUI() {
     if (hpInput) hpInput.value = String(player.maxHp);
     if (staminaInput) staminaInput.value = String(player.maxStamina);
     if (dexInput) dexInput.value = String(player.dex);
+    if (turnsInput) turnsInput.value = String(player.turns ?? 3);
     if (saveButton) {
       saveButton.textContent = player.saved ? `Jugador ${index + 1} guardado` : `Guardar jugador ${index + 1}`;
       saveButton.disabled = Boolean(player.saved);
@@ -275,9 +306,11 @@ function syncSetupUI() {
     const hpButton = q(`#player-${index}-card .attribute-pill[data-attr="hp"]`);
     const staminaButton = q(`#player-${index}-card .attribute-pill[data-attr="stamina"]`);
     const dexButton = q(`#player-${index}-card .attribute-pill[data-attr="dex"]`);
+    const turnsButton = q(`#player-${index}-card .attribute-pill[data-attr="turns"]`);
     if (hpButton) hpButton.textContent = `Vida: ${player.maxHp}`;
     if (staminaButton) staminaButton.textContent = `Stamina: ${player.maxStamina}`;
     if (dexButton) dexButton.textContent = `Destreza: ${player.dex}`;
+    if (turnsButton) turnsButton.textContent = `Turnos: ${player.turns ?? 3}`;
   }
 }
 
@@ -311,6 +344,11 @@ function handleAttributeEdit(event) {
     label = 'Destreza';
     min = -5;
     max = 5;
+  } else if (attr === 'turns') {
+    currentValue = players[index].turns ?? 3;
+    label = 'Turnos';
+    min = 0;
+    max = 20;
   }
 
   const value = window.prompt(`${label} (${min} a ${max})`, String(currentValue));
@@ -325,6 +363,8 @@ function handleAttributeEdit(event) {
     players[index].stamina = players[index].maxStamina;
   } else if (attr === 'dex') {
     players[index].dex = Math.max(min, Math.min(max, numeric));
+  } else if (attr === 'turns') {
+    players[index].turns = Math.max(min, Math.min(max, numeric));
   }
   syncSetupUI();
 }
@@ -381,6 +421,8 @@ function render() {
     q('#stamina-bar').max = active.maxStamina;
     q('#stamina-bar').value = Math.max(0, active.stamina);
     q('#stat-block').textContent = `${active.block}`;
+    q('#turns-remaining-value').textContent = `Turnos: ${active.turns ?? 0}`;
+    q('#back-to-lobby').classList.toggle('hidden', !state.winner);
     q('#action-panel').classList.toggle('hidden', !state.selectedAction || state.winner);
     renderActionPanel();
     q('#battle-log').innerHTML = renderBattleLog();
@@ -560,7 +602,7 @@ function renderActionPanel() {
 
   if (state.selectedAction === 'pass') {
     title = 'Pasar (ganar stamina)';
-    controlNode = createSliderAction('Selecciona cuánto stamina ganar', 1, 30, 1, value => {
+    controlNode = createSliderAction('Selecciona cuánto stamina ganar', 1, 30, 4, value => {
       const requested = active.stamina + value;
       if (requested <= active.maxStamina) {
         active.stamina = requested;
@@ -573,6 +615,14 @@ function renderActionPanel() {
 
   q('#action-panel-title').textContent = title;
   content.appendChild(controlNode);
+}
+
+function adjustTurnCount(delta) {
+  if (state.phase !== 'battle') return;
+  const active = players[state.activeIndex];
+  const next = Math.max(0, (active.turns ?? 0) + delta);
+  active.turns = next;
+  render();
 }
 
 function createSliderAction(label, min, max, value, callback) {
