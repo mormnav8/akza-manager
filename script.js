@@ -99,68 +99,130 @@ function init() {
   render();
 }
 
-function createCharacter() {
-  const name = window.prompt('Nombre del nuevo personaje');
-  if (!name) return;
-  const hp = Number(window.prompt('Vida máxima', '20')) || 20;
-  const stamina = Number(window.prompt('Stamina máxima', '10')) || 10;
-  const dex = Number(window.prompt('Destreza (-5 a 5)', '3')) || 3;
-  const turns = Number(window.prompt('Turnos iniciales', '3')) || 3;
-  let bossId = null;
-  if (bosses.length > 0) {
-    const bossLabel = bosses.map((b, idx) => `${idx}: ${b.name}`).join('\n');
-    const selected = window.prompt(`Selecciona jefe por índice o deja vacío para ninguno:\n${bossLabel}`, '');
-    if (selected !== null && selected.trim() !== '') {
-      const selectedIndex = Number(selected);
-      if (Number.isFinite(selectedIndex) && bosses[selectedIndex]) bossId = bosses[selectedIndex].id;
-    }
+function createModal(title, contentHtml, onSave) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-card">
+      <h3>${title}</h3>
+      <div class="modal-content">${contentHtml}</div>
+      <div class="modal-actions">
+        <button class="secondary-button" type="button" data-action="cancel">Cancelar</button>
+        <button class="primary-button" type="button" data-action="save">Guardar</button>
+      </div>
+    </div>
+  `;
+  const close = () => overlay.remove();
+  overlay.addEventListener('click', event => {
+    if (event.target === overlay) close();
+  });
+  const cancelBtn = overlay.querySelector('[data-action="cancel"]');
+  if (cancelBtn) cancelBtn.addEventListener('click', close);
+  const saveBtn = overlay.querySelector('[data-action="save"]');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', () => {
+      const shouldClose = onSave(overlay);
+      if (shouldClose !== false) close();
+    });
   }
-  const c = {
-    id: generateId('char'),
-    name: name.trim(),
-    maxHp: hp,
-    hp: hp,
-    maxStamina: stamina,
-    stamina: stamina,
-    dex: dex,
-    turns: Math.max(0, turns),
-    level: 1,
-    exp: 0,
-    bossId,
-  };
-  characters.push(c);
-  saveCharacters();
-  renderHome();
-  alert(`Personaje ${c.name} creado. Usa el botón Editar para ajustar nivel, experiencia o jefe.`);
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add('show'));
+  return overlay;
+}
+
+function createCharacter() {
+  const bossOptions = bosses.length > 0
+    ? bosses.map((b, idx) => `<option value="${b.id}" ${idx === 0 ? 'selected' : ''}>${b.name}</option>`).join('')
+    : '<option value="">Sin jefes</option>';
+  createModal(
+    'Crear personaje',
+    `
+      <div class="form-grid">
+        <label>Nombre<input id="new-char-name" type="text" required /></label>
+        <label>Vida máxima<input id="new-char-hp" type="number" min="1" value="20" /></label>
+        <label>Stamina máxima<input id="new-char-stamina" type="number" min="1" value="10" /></label>
+        <label>Destreza<input id="new-char-dex" type="number" min="-5" max="5" value="3" /></label>
+        <label>Turnos<input id="new-char-turns" type="number" min="0" value="3" /></label>
+        <label>Nivel<input id="new-char-level" type="number" min="1" max="10" value="1" /></label>
+        <label>Experiencia<input id="new-char-exp" type="number" min="0" max="999" value="0" /></label>
+        <label>Jefe<select id="new-char-boss">${bossOptions}</select></label>
+      </div>
+    `,
+    overlay => {
+      const name = overlay.querySelector('#new-char-name').value.trim();
+      if (!name) {
+        alert('El nombre es obligatorio.');
+        return false;
+      }
+      const hp = Math.max(1, Number(overlay.querySelector('#new-char-hp').value) || 20);
+      const stamina = Math.max(1, Number(overlay.querySelector('#new-char-stamina').value) || 10);
+      const dex = Math.max(-5, Math.min(5, Number(overlay.querySelector('#new-char-dex').value) || 3));
+      const turns = Math.max(0, Number(overlay.querySelector('#new-char-turns').value) || 3);
+      const level = Math.max(1, Math.min(10, Number(overlay.querySelector('#new-char-level').value) || 1));
+      const exp = Math.max(0, Math.min(999, Number(overlay.querySelector('#new-char-exp').value) || 0));
+      const bossId = overlay.querySelector('#new-char-boss').value || null;
+      const c = {
+        id: generateId('char'),
+        name,
+        maxHp: hp,
+        hp,
+        maxStamina: stamina,
+        stamina,
+        dex,
+        turns,
+        level,
+        exp,
+        bossId,
+      };
+      characters.push(c);
+      saveCharacters();
+      renderHome();
+    }
+  );
 }
 
 function editCharacter(idx) {
   const c = characters[idx];
   if (!c) return;
-  const name = window.prompt('Nombre', c.name);
-  if (name !== null) c.name = name.trim() || c.name;
-  const hp = window.prompt('Vida máxima', String(c.maxHp));
-  if (hp !== null) { const n = Number(hp); if (Number.isFinite(n) && n>0) { c.maxHp = n; c.hp = Math.min(c.hp, c.maxHp); } }
-  const stam = window.prompt('Stamina máxima', String(c.maxStamina));
-  if (stam !== null) { const n = Number(stam); if (Number.isFinite(n) && n>0) { c.maxStamina = n; c.stamina = Math.min(c.stamina, c.maxStamina); } }
-  const dex = window.prompt('Destreza (-5 a 5)', String(c.dex||3));
-  if (dex !== null) { const n = Number(dex); if (Number.isFinite(n)) c.dex = Math.max(-5, Math.min(5, n)); }
-  const turns = window.prompt('Turnos', String(c.turns ?? 3));
-  if (turns !== null) { const n = Number(turns); if (Number.isFinite(n)) c.turns = Math.max(0, n); }
-  const exp = window.prompt('Experiencia', String(c.exp ?? 0));
-  if (exp !== null) { const n = Number(exp); if (Number.isFinite(n)) c.exp = Math.max(0, n); }
-  const level = window.prompt('Nivel', String(c.level ?? 1));
-  if (level !== null) { const n = Number(level); if (Number.isFinite(n) && n >= 1) c.level = Math.min(10, Math.max(1, n)); }
-  if (bosses.length > 0) {
-    const bossLabel = bosses.map((b, idx) => `${idx}: ${b.name}`).join('\n');
-    const selected = window.prompt(`Selecciona jefe por índice (o deja vacío para mantener):\n${bossLabel}`, '');
-    if (selected !== null && selected.trim() !== '') {
-      const selectedIndex = Number(selected);
-      if (Number.isFinite(selectedIndex) && bosses[selectedIndex]) c.bossId = bosses[selectedIndex].id;
+  const bossOptions = bosses.length > 0
+    ? bosses.map(b => `<option value="${b.id}" ${b.id === c.bossId ? 'selected' : ''}>${b.name}</option>`).join('')
+    : '<option value="">Sin jefes</option>';
+  createModal(
+    `Editar ${c.name}`,
+    `
+      <div class="form-grid">
+        <label>Nombre<input id="edit-char-name" type="text" value="${c.name}" /></label>
+        <label>Vida máxima<input id="edit-char-hp" type="number" min="1" value="${c.maxHp}" /></label>
+        <label>Stamina máxima<input id="edit-char-stamina" type="number" min="1" value="${c.maxStamina}" /></label>
+        <label>Destreza<input id="edit-char-dex" type="number" min="-5" max="5" value="${c.dex}" /></label>
+        <label>Turnos<input id="edit-char-turns" type="number" min="0" value="${c.turns ?? 3}" /></label>
+        <label>Nivel<input id="edit-char-level" type="number" min="1" max="10" value="${c.level || 1}" /></label>
+        <label>Experiencia<input id="edit-char-exp" type="number" min="0" max="999" value="${c.exp || 0}" /></label>
+        <label>Jefe<select id="edit-char-boss">${bossOptions}</select></label>
+      </div>
+    `,
+    overlay => {
+      const name = overlay.querySelector('#edit-char-name').value.trim();
+      if (!name) {
+        alert('El nombre es obligatorio.');
+        return false;
+      }
+      c.name = name;
+      const hp = Math.max(1, Number(overlay.querySelector('#edit-char-hp').value) || c.maxHp);
+      c.maxHp = hp;
+      c.hp = Math.min(c.hp, hp);
+      const stamina = Math.max(1, Number(overlay.querySelector('#edit-char-stamina').value) || c.maxStamina);
+      c.maxStamina = stamina;
+      c.stamina = Math.min(c.stamina, stamina);
+      c.dex = Math.max(-5, Math.min(5, Number(overlay.querySelector('#edit-char-dex').value) || c.dex));
+      c.turns = Math.max(0, Number(overlay.querySelector('#edit-char-turns').value) || c.turns || 3);
+      c.level = Math.max(1, Math.min(10, Number(overlay.querySelector('#edit-char-level').value) || c.level || 1));
+      c.exp = Math.max(0, Math.min(999, Number(overlay.querySelector('#edit-char-exp').value) || c.exp || 0));
+      c.bossId = overlay.querySelector('#edit-char-boss').value || null;
+      saveCharacters();
+      renderHome();
     }
-  }
-  saveCharacters();
-  renderHome();
+  );
 }
 
 function renderHome() {
@@ -223,27 +285,52 @@ function renderHome() {
 }
 
 function createBoss() {
-  const name = window.prompt('Nombre del nuevo jefe');
-  if (!name) return;
-  const boss = { id: `boss-${Date.now()}-${Math.random().toString(36).slice(2,5)}`, name: name.trim(), money: 0 };
-  bosses.push(boss);
-  saveBosses();
-  renderHome();
-  alert(`Jefe ${boss.name} creado. Puedes editar personajes para asignarlos a este jefe o iniciar batallas.`);
+  createModal(
+    'Crear jefe',
+    `
+      <div class="form-grid">
+        <label>Nombre<input id="new-boss-name" type="text" required /></label>
+        <label>Dinero inicial<input id="new-boss-money" type="number" min="0" value="0" /></label>
+      </div>
+    `,
+    overlay => {
+      const name = overlay.querySelector('#new-boss-name').value.trim();
+      if (!name) {
+        alert('El nombre del jefe es obligatorio.');
+        return false;
+      }
+      const money = Math.max(0, Number(overlay.querySelector('#new-boss-money').value) || 0);
+      const boss = { id: generateId('boss'), name, money };
+      bosses.push(boss);
+      saveBosses();
+      renderHome();
+    }
+  );
 }
 
 function editBoss(idx) {
   const boss = bosses[idx];
   if (!boss) return;
-  const name = window.prompt('Nombre del jefe', boss.name);
-  if (name !== null) boss.name = name.trim() || boss.name;
-  const money = window.prompt('Dinero', String(boss.money || 0));
-  if (money !== null) {
-    const n = Number(money);
-    if (Number.isFinite(n)) boss.money = Math.max(0, n);
-  }
-  saveBosses();
-  renderHome();
+  createModal(
+    `Editar ${boss.name}`,
+    `
+      <div class="form-grid">
+        <label>Nombre<input id="edit-boss-name" type="text" value="${boss.name}" /></label>
+        <label>Dinero<input id="edit-boss-money" type="number" min="0" value="${boss.money || 0}" /></label>
+      </div>
+    `,
+    overlay => {
+      const name = overlay.querySelector('#edit-boss-name').value.trim();
+      if (!name) {
+        alert('El nombre del jefe es obligatorio.');
+        return false;
+      }
+      boss.name = name;
+      boss.money = Math.max(0, Number(overlay.querySelector('#edit-boss-money').value) || 0);
+      saveBosses();
+      renderHome();
+    }
+  );
 }
 
 function toggleHistory() {
