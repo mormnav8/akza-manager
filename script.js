@@ -110,8 +110,10 @@ function createCharacter() {
   if (bosses.length > 0) {
     const bossLabel = bosses.map((b, idx) => `${idx}: ${b.name}`).join('\n');
     const selected = window.prompt(`Selecciona jefe por índice o deja vacío para ninguno:\n${bossLabel}`, '');
-    const selectedIndex = Number(selected);
-    if (selected && Number.isFinite(selectedIndex) && bosses[selectedIndex]) bossId = bosses[selectedIndex].id;
+    if (selected !== null && selected.trim() !== '') {
+      const selectedIndex = Number(selected);
+      if (Number.isFinite(selectedIndex) && bosses[selectedIndex]) bossId = bosses[selectedIndex].id;
+    }
   }
   const c = {
     id: generateId('char'),
@@ -129,6 +131,7 @@ function createCharacter() {
   characters.push(c);
   saveCharacters();
   renderHome();
+  alert(`Personaje ${c.name} creado. Usa el botón Editar para ajustar nivel, experiencia o jefe.`);
 }
 
 function editCharacter(idx) {
@@ -151,8 +154,10 @@ function editCharacter(idx) {
   if (bosses.length > 0) {
     const bossLabel = bosses.map((b, idx) => `${idx}: ${b.name}`).join('\n');
     const selected = window.prompt(`Selecciona jefe por índice (o deja vacío para mantener):\n${bossLabel}`, '');
-    const selectedIndex = Number(selected);
-    if (selected && Number.isFinite(selectedIndex) && bosses[selectedIndex]) c.bossId = bosses[selectedIndex].id;
+    if (selected !== null && selected.trim() !== '') {
+      const selectedIndex = Number(selected);
+      if (Number.isFinite(selectedIndex) && bosses[selectedIndex]) c.bossId = bosses[selectedIndex].id;
+    }
   }
   saveCharacters();
   renderHome();
@@ -177,7 +182,7 @@ function renderHome() {
         card.style.background = 'rgba(15,23,42,0.6)';
         card.style.borderRadius = '8px';
         const members = characters.filter(c => c.bossId === b.id).map(c => c.name).join(', ');
-        card.innerHTML = `<div><strong>${b.name}</strong><div class="muted">Dinero: ${b.money || 0} · Personajes: ${members || 'ninguno'}</div></div>`;
+        card.innerHTML = `<div><strong>${b.name}</strong><div class="muted">Dinero: ${b.money || 0}</div><div class="muted">Personajes: ${members || 'ninguno'}</div></div>`;
         const edit = document.createElement('button');
         edit.className = 'small-button secondary-button';
         edit.textContent = 'Editar';
@@ -224,6 +229,7 @@ function createBoss() {
   bosses.push(boss);
   saveBosses();
   renderHome();
+  alert(`Jefe ${boss.name} creado. Puedes editar personajes para asignarlos a este jefe o iniciar batallas.`);
 }
 
 function editBoss(idx) {
