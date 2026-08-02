@@ -1,5 +1,7 @@
 const players = [createEmptyPlayer(), createEmptyPlayer()];
+let bosses = JSON.parse(localStorage.getItem('akz_bosses') || '[]');
 let characters = JSON.parse(localStorage.getItem('akz_characters') || '[]');
+function saveBosses() { localStorage.setItem('akz_bosses', JSON.stringify(bosses)); }
 function saveCharacters() { localStorage.setItem('akz_characters', JSON.stringify(characters)); }
 const state = {
   activeIndex: 0,
@@ -22,12 +24,45 @@ function createEmptyPlayer() {
     stamina: 10,
     dex: 3,
     turns: 3,
+    level: 1,
+    exp: 0,
+    bossId: null,
     block: 0,
     saved: false,
   };
 }
 
+function generateId(prefix = 'item') {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
+}
+
+function ensureBossIds() {
+  let changed = false;
+  bosses = bosses.map(boss => {
+    if (!boss.id) {
+      changed = true;
+      return { ...boss, id: generateId('boss') };
+    }
+    return boss;
+  });
+  if (changed) saveBosses();
+}
+
+function ensureCharacterIds() {
+  let changed = false;
+  characters = characters.map(char => {
+    if (!char.id) {
+      changed = true;
+      return { ...char, id: generateId('char'), level: char.level || 1, exp: char.exp || 0, bossId: char.bossId || null };
+    }
+    return { ...char, level: char.level || 1, exp: char.exp || 0, bossId: char.bossId || null };
+  });
+  if (changed) saveCharacters();
+}
+
 function init() {
+  ensureBossIds();
+  ensureCharacterIds();
   qa('[id^="save-player-"]').forEach(button => button.addEventListener('click', handleSavePlayer));
   qa('.player-title-button').forEach(button => button.addEventListener('click', handlePlayerTitleEdit));
   qa('.attribute-pill').forEach(button => button.addEventListener('click', handleAttributeEdit));
@@ -36,6 +71,8 @@ function init() {
   q('#confirm-start').addEventListener('click', startBattle);
   const createBtn = q('#create-character');
   if (createBtn) createBtn.addEventListener('click', createCharacter);
+  const createBossBtn = q('#create-boss');
+  if (createBossBtn) createBossBtn.addEventListener('click', createBoss);
   q('#turns-plus').addEventListener('click', () => adjustTurnCount(1));
   q('#turns-minus').addEventListener('click', () => adjustTurnCount(-1));
   q('#back-to-lobby').addEventListener('click', () => { state.phase = 'home'; state.winner = null; render(); });
@@ -69,7 +106,26 @@ function createCharacter() {
   const stamina = Number(window.prompt('Stamina máxima', '10')) || 10;
   const dex = Number(window.prompt('Destreza (-5 a 5)', '3')) || 3;
   const turns = Number(window.prompt('Turnos iniciales', '3')) || 3;
-  const c = { name: name.trim(), maxHp: hp, hp: hp, maxStamina: stamina, stamina: stamina, dex: dex, turns: Math.max(0, turns) };
+  let bossId = null;
+  if (bosses.length > 0) {
+    const bossLabel = bosses.map((b, idx) => `${idx}: ${b.name}`).join('\n');
+    const selected = window.prompt(`Selecciona jefe por índice o deja vacío para ninguno:\n${bossLabel}`, '');
+    const selectedIndex = Number(selected);
+    if (selected && Number.isFinite(selectedIndex) && bosses[selectedIndex]) bossId = bosses[selectedIndex].id;
+  }
+  const c = {
+    id: generateId('char'),
+    name: name.trim(),
+    maxHp: hp,
+    hp: hp,
+    maxStamina: stamina,
+    stamina: stamina,
+    dex: dex,
+    turns: Math.max(0, turns),
+    level: 1,
+    exp: 0,
+    bossId,
+  };
   characters.push(c);
   saveCharacters();
   renderHome();
@@ -88,11 +144,49 @@ function editCharacter(idx) {
   if (dex !== null) { const n = Number(dex); if (Number.isFinite(n)) c.dex = Math.max(-5, Math.min(5, n)); }
   const turns = window.prompt('Turnos', String(c.turns ?? 3));
   if (turns !== null) { const n = Number(turns); if (Number.isFinite(n)) c.turns = Math.max(0, n); }
+  const exp = window.prompt('Experiencia', String(c.exp ?? 0));
+  if (exp !== null) { const n = Number(exp); if (Number.isFinite(n)) c.exp = Math.max(0, n); }
+  const level = window.prompt('Nivel', String(c.level ?? 1));
+  if (level !== null) { const n = Number(level); if (Number.isFinite(n) && n >= 1) c.level = Math.min(10, Math.max(1, n)); }
+  if (bosses.length > 0) {
+    const bossLabel = bosses.map((b, idx) => `${idx}: ${b.name}`).join('\n');
+    const selected = window.prompt(`Selecciona jefe por índice (o deja vacío para mantener):\n${bossLabel}`, '');
+    const selectedIndex = Number(selected);
+    if (selected && Number.isFinite(selectedIndex) && bosses[selectedIndex]) c.bossId = bosses[selectedIndex].id;
+  }
   saveCharacters();
   renderHome();
 }
 
 function renderHome() {
+  if (!Array.isArray(bosses)) bosses = [];
+  if (!Array.isArray(characters)) characters = [];
+  const bossList = q('#boss-list');
+  if (bossList) {
+    bossList.innerHTML = '';
+    if (bosses.length === 0) {
+      bossList.innerHTML = '<p class="muted">No hay jefes. Crea uno nuevo.</p>';
+    } else {
+      bosses.forEach((b, i) => {
+        const card = document.createElement('div');
+        card.style.display = 'flex';
+        card.style.alignItems = 'center';
+        card.style.justifyContent = 'space-between';
+        card.style.padding = '8px';
+        card.style.margin = '6px 0';
+        card.style.background = 'rgba(15,23,42,0.6)';
+        card.style.borderRadius = '8px';
+        const members = characters.filter(c => c.bossId === b.id).map(c => c.name).join(', ');
+        card.innerHTML = `<div><strong>${b.name}</strong><div class="muted">Dinero: ${b.money || 0} · Personajes: ${members || 'ninguno'}</div></div>`;
+        const edit = document.createElement('button');
+        edit.className = 'small-button secondary-button';
+        edit.textContent = 'Editar';
+        edit.addEventListener('click', () => editBoss(i));
+        card.appendChild(edit);
+        bossList.appendChild(card);
+      });
+    }
+  }
   const list = q('#home-list');
   if (!list) return;
   list.innerHTML = '';
@@ -110,7 +204,8 @@ function renderHome() {
     card.style.background = 'rgba(15,23,42,0.6)';
     card.style.borderRadius = '8px';
     const left = document.createElement('div');
-    left.innerHTML = `<strong>${c.name}</strong><div class="muted">Vida ${c.maxHp} · Stamina ${c.maxStamina} · Dex ${c.dex}</div>`;
+      const boss = bosses.find(b => b.id === c.bossId);
+    left.innerHTML = `<strong>${c.name}</strong><div class="muted">Vida ${c.maxHp} · Stamina ${c.maxStamina} · Dex ${c.dex} · Nivel ${c.level || 1} · Exp ${c.exp || 0} · Jefe ${boss ? boss.name : 'ninguno'}</div>`;
     const right = document.createElement('div');
     right.style.display = 'flex'; right.style.gap = '6px';
     const sel = document.createElement('input'); sel.type = 'checkbox'; sel.dataset.idx = String(i); sel.className = 'select-char';
@@ -120,6 +215,29 @@ function renderHome() {
     card.appendChild(left); card.appendChild(right);
     list.appendChild(card);
   });
+}
+
+function createBoss() {
+  const name = window.prompt('Nombre del nuevo jefe');
+  if (!name) return;
+  const boss = { id: `boss-${Date.now()}-${Math.random().toString(36).slice(2,5)}`, name: name.trim(), money: 0 };
+  bosses.push(boss);
+  saveBosses();
+  renderHome();
+}
+
+function editBoss(idx) {
+  const boss = bosses[idx];
+  if (!boss) return;
+  const name = window.prompt('Nombre del jefe', boss.name);
+  if (name !== null) boss.name = name.trim() || boss.name;
+  const money = window.prompt('Dinero', String(boss.money || 0));
+  if (money !== null) {
+    const n = Number(money);
+    if (Number.isFinite(n)) boss.money = Math.max(0, n);
+  }
+  saveBosses();
+  renderHome();
 }
 
 function toggleHistory() {
@@ -141,9 +259,13 @@ function startBattleSelected() {
   const a = characters[Number(checks[0].dataset.idx)];
   const b = characters[Number(checks[1].dataset.idx)];
   if (!a || !b) return;
-  // copy into players
+  // copy into players and preserve id, level, exp, boss assignment
   players[0] = {
     ...a,
+    id: a.id,
+    bossId: a.bossId || null,
+    level: a.level || 1,
+    exp: a.exp || 0,
     saved: true,
     block: 0,
     hp: a.maxHp,
@@ -154,6 +276,10 @@ function startBattleSelected() {
   };
   players[1] = {
     ...b,
+    id: b.id,
+    bossId: b.bossId || null,
+    level: b.level || 1,
+    exp: b.exp || 0,
     saved: true,
     block: 0,
     hp: b.maxHp,
@@ -307,10 +433,14 @@ function syncSetupUI() {
     const staminaButton = q(`#player-${index}-card .attribute-pill[data-attr="stamina"]`);
     const dexButton = q(`#player-${index}-card .attribute-pill[data-attr="dex"]`);
     const turnsButton = q(`#player-${index}-card .attribute-pill[data-attr="turns"]`);
+    const levelButton = q(`#player-${index}-card .attribute-pill[data-attr="level"]`);
+    const expButton = q(`#player-${index}-card .attribute-pill[data-attr="exp"]`);
     if (hpButton) hpButton.textContent = `Vida: ${player.maxHp}`;
     if (staminaButton) staminaButton.textContent = `Stamina: ${player.maxStamina}`;
     if (dexButton) dexButton.textContent = `Destreza: ${player.dex}`;
     if (turnsButton) turnsButton.textContent = `Turnos: ${player.turns ?? 3}`;
+    if (levelButton) levelButton.textContent = `Nivel: ${player.level || 1}`;
+    if (expButton) expButton.textContent = `Exp: ${player.exp || 0}`;
   }
 }
 
@@ -349,6 +479,16 @@ function handleAttributeEdit(event) {
     label = 'Turnos';
     min = 0;
     max = 20;
+  } else if (attr === 'level') {
+    currentValue = players[index].level || 1;
+    label = 'Nivel';
+    min = 1;
+    max = 10;
+  } else if (attr === 'exp') {
+    currentValue = players[index].exp || 0;
+    label = 'Experiencia';
+    min = 0;
+    max = 999;
   }
 
   const value = window.prompt(`${label} (${min} a ${max})`, String(currentValue));
@@ -365,6 +505,10 @@ function handleAttributeEdit(event) {
     players[index].dex = Math.max(min, Math.min(max, numeric));
   } else if (attr === 'turns') {
     players[index].turns = Math.max(min, Math.min(max, numeric));
+  } else if (attr === 'level') {
+    players[index].level = Math.max(min, Math.min(max, numeric));
+  } else if (attr === 'exp') {
+    players[index].exp = Math.max(min, Math.min(max, numeric));
   }
   syncSetupUI();
 }
@@ -725,19 +869,56 @@ function renderBattleLog() {
 function checkGameEnd() {
   for (let i = 0; i < players.length; i++) {
     if (players[i].hp <= 0) {
-      state.winner = players[1 - i] || players[i];
-      q('#action-panel').classList.add('hidden');
-      updateLog(`${state.winner.name} ha ganado el duelo.`);
-      // persist history
-      try {
-        const hist = JSON.parse(localStorage.getItem('akz_battles') || '[]');
-        hist.unshift({ time: Date.now(), winner: state.winner.name, loser: players[i].name });
-        localStorage.setItem('akz_battles', JSON.stringify(hist.slice(0,200)));
-      } catch (e) { console.warn('hist save failed', e); }
+      const winner = players[1 - i] || players[i];
+      const loser = players[i];
+      processEndBattle(winner, loser);
       return true;
     }
   }
   return false;
+}
+
+function processEndBattle(winner, loser) {
+  const xpGain = loser.level || 1;
+  winner.exp = (winner.exp || 0) + xpGain;
+  const levelThresholds = {1:2,2:4,3:12,4:20,5:30,6:42,7:56,8:72,9:100};
+  if (winner.level < 10 && winner.exp >= (levelThresholds[winner.level] || Infinity)) {
+    winner.level = Math.min(10, winner.level + 1);
+    winner.exp = 0;
+    updateLog(`${winner.name} sube a nivel ${winner.level} y reinicia experiencia a 0.`);
+  } else {
+    updateLog(`${winner.name} gana ${xpGain} de experiencia.`);
+  }
+
+  const money = Number(window.prompt('Introduce el dinero ganado', '0')) || 0;
+  const boss = bosses.find(b => b.id === winner.bossId);
+  if (boss) {
+    boss.money = (boss.money || 0) + money;
+    saveBosses();
+    updateLog(`${boss.name} gana ${money} de dinero.`);
+  } else if (money > 0) {
+    updateLog(`No se asignó dinero porque ${winner.name} no está asignado a un jefe.`);
+  }
+
+  if (winner.id) {
+    const stored = characters.find(c => c.id === winner.id);
+    if (stored) {
+      stored.exp = winner.exp;
+      stored.level = winner.level;
+      saveCharacters();
+    }
+  }
+
+  try {
+    const hist = JSON.parse(localStorage.getItem('akz_battles') || '[]');
+    hist.unshift({ time: Date.now(), winner: winner.name, loser: loser.name, xp: xpGain, money, boss: boss ? boss.name : null });
+    localStorage.setItem('akz_battles', JSON.stringify(hist.slice(0,200)));
+  } catch (e) { console.warn('hist save failed', e); }
+
+  q('#action-panel').classList.add('hidden');
+  state.winner = winner;
+  updateLog(`${winner.name} ha ganado el duelo.`);
+  render();
 }
 
 function finalizeTurn() {

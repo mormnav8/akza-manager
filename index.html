@@ -17,11 +17,18 @@
 
     <section id="home-screen" class="screen active-screen">
       <div class="roll-box">
+        <h2>Jefes</h2>
+        <div id="boss-actions" style="display:flex;gap:8px;justify-content:center;margin:10px 0">
+          <button class="primary-button" id="create-boss">Crear jefe</button>
+          <button class="secondary-button" id="view-history">Historial</button>
+          <button class="primary-button" id="start-battle-selected">Iniciar batalla</button>
+        </div>
+        <div id="boss-list"></div>
+      </div>
+      <div class="roll-box" style="margin-top:18px">
         <h2>Personajes</h2>
         <div id="home-actions" style="display:flex;gap:8px;justify-content:center;margin:10px 0">
           <button class="primary-button" id="create-character">Crear personaje</button>
-          <button class="secondary-button" id="view-history">Historial</button>
-          <button class="primary-button" id="start-battle-selected">Iniciar batalla</button>
         </div>
         <div id="home-list"></div>
         <div id="history-list" class="hidden" style="margin-top:12px;text-align:left;max-height:240px;overflow:auto;background:rgba(0,0,0,0.05);padding:8px;border-radius:8px"></div>
@@ -37,6 +44,8 @@
             <button class="attribute-pill" data-player="0" data-attr="stamina" type="button">Stamina: 10</button>
             <button class="attribute-pill" data-player="0" data-attr="dex" type="button">Destreza: 3</button>
             <button class="attribute-pill" data-player="0" data-attr="turns" type="button">Turnos: 3</button>
+            <button class="attribute-pill" data-player="0" data-attr="level" type="button">Nivel: 1</button>
+            <button class="attribute-pill" data-player="0" data-attr="exp" type="button">Exp: 0</button>
           </div>
           <div class="field-group hidden">
             <label for="player-0-name">Nombre</label>
@@ -68,6 +77,8 @@
             <button class="attribute-pill" data-player="1" data-attr="stamina" type="button">Stamina: 10</button>
             <button class="attribute-pill" data-player="1" data-attr="dex" type="button">Destreza: 3</button>
             <button class="attribute-pill" data-player="1" data-attr="turns" type="button">Turnos: 3</button>
+            <button class="attribute-pill" data-player="1" data-attr="level" type="button">Nivel: 1</button>
+            <button class="attribute-pill" data-player="1" data-attr="exp" type="button">Exp: 0</button>
           </div>
           <div class="field-group hidden">
             <label for="player-1-name">Nombre</label>
